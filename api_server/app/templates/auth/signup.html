@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}회원가입 | 404 R·N·F AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+  <div class="auth-container">
+    <div class="auth-left">
+      <p class="auth-badge">AI 기반 도로 낙하물 탐지 시스템</p>
+      <h1>회원가입</h1>
+      <p class="auth-desc">
+        계정을 생성하면 신고 등록, 처리 상태 확인,<br>
+        관리자 권한 신청 등의 기능을 이용할 수 있습니다.
+      </p>
+    </div>
+
+    <div class="auth-card">
+      <h2>회원가입</h2>
+      <p class="auth-subtext">필수 정보를 입력하고 계정을 생성하세요.</p>
+
+      <form id="signup-form" class="auth-form">
+        <div class="form-group">
+          <label for="username">아이디</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            placeholder="아이디 입력"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="email">이메일</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="이메일 입력"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="password">비밀번호</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="비밀번호 입력"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="name">이름</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            placeholder="이름 입력"
+          >
+        </div>
+
+        <p id="signup-message" class="form-message"></p>
+
+        <button type="submit" class="auth-submit-btn">회원가입</button>
+      </form>
+
+      <div class="auth-bottom">
+        <span>이미 계정이 있으신가요?</span>
+        <a href="{{ url_for('auth.login') }}">로그인</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+{% endblock %}

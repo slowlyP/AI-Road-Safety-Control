@@ -1,0 +1,139 @@
+{% extends "base.html" %} {% block title %}도로 위험 신고 - ROADGUARD AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="report-wrapper">
+    <header class="report-header">
+      <span class="logo-badge">404</span>
+      <span class="logo-text">R·N·F <strong>AI</strong></span>
+    </a>
+        <p><br>AI 기반 도로 위험 요소 신고 시스템</p>
+    </header>
+
+    <form id="reportForm" action="{{ url_for('report.create_report') }}" method="POST" enctype="multipart/form-data">
+        <section class="form-section">
+            <h3><i class="fa-solid fa-camera"></i> 사진 및 영상 첨부</h3>
+            <div id="drop-zone" class="upload-box" onclick="document.getElementById('fileInput').click()">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <p>파일을 여기로 끌어다 놓거나 클릭하세요</p>
+                <p>(영상 길이 30초이하)</p>
+                <input type="file" id="fileInput" name="files" accept="image/*,video/*" multiple hidden>
+                <div id="file-preview" class="preview-container"></div>
+            </div>
+        </section>
+
+        <section class="form-section">
+            <h3><i class="fa-solid fa-location-dot"></i> 발생 위치</h3>
+            <div class="location-group">
+                <input type="text" id="location_text" name="location_text"
+                       placeholder="지도를 클릭하거나 사진을 업로드하세요" required readonly>
+                <button type="button" id="openMapBtn" class="btn-secondary" onclick="openMapModal()">지도에서 선택하기</button>
+            </div>
+            <input type="hidden" id="latitude" name="latitude" required>
+            <input type="hidden" id="longitude" name="longitude" required>
+        </section>
+
+        <section class="form-section">
+            <h3><i class="fa-solid fa-pen-to-square"></i> 신고 정보</h3>
+            <div class="input-group">
+                <label>제목</label>
+                <input type="text" name="title" placeholder="입력하지 않으면 AI가 자동으로 작성합니다">
+            </div>
+            <div class="input-group">
+                <label>상세 내용</label>
+                <textarea name="content" id="content-area" rows="4" placeholder="상황을 상세히 적어주세요"></textarea>
+            </div>
+        </section>
+
+        <button type="submit" class="btn-primary">신고 제출하기</button>
+    </form>
+</div>
+
+<div id="mapModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4><i class="fa-solid fa-map-location-dot"></i> 위치 선택</h4>
+            <span class="close-modal" onclick="closeMapModal()">&times;</span>
+        </div>
+        <div id="map" style="width: 100%; height: 350px; background-color: #eee;"></div>
+
+        <div style="padding: 10px 20px 0 20px;">
+            <button type="button" class="btn-secondary" style="width: 100%;" onclick="getCurrentLocation()">
+                <i class="fa-solid fa-location-crosshairs"></i> 내 현재 위치 찾기
+            </button>
+        </div>
+        <div style="padding: 20px;">
+            <button type="button" id="confirmLocationBtn" class="btn-confirm-location" style="width: 100%;" onclick="confirmLocation()">이 위치로 지정</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+
+<script src="{{ url_for('static', filename='js/report.js') }}"></script>
+
+{# 하드코딩된 키 대신 서버에서 넘겨준 google_maps_api_key 변수를 사용합니다 #}
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places&callback=initMap"></script>
+
+<script>
+    document.getElementById('reportForm').addEventListener('submit', function(e) {
+        // 폼 필드 데이터 가져오기
+        const locationText = document.getElementById('location_text').value.trim();
+        const lat = document.getElementById('latitude').value;
+
+        // 위치 정보가 '없음'이거나 비어있을 경우 제출 차단
+        if (!locationText || locationText === '위치 정보 없음' || !lat || parseFloat(lat) === 0) {
+            e.preventDefault(); // 서버 전송 중단
+            alert("⚠️ 위치 정보가 누락되었습니다.\n사진을 업로드하여 위치를 추출하거나, 지도에서 사고 발생 지점을 선택해 주세요.");
+
+            // 지도 모달이 닫혀있다면 열어주는 함수 호출 (필요 시)
+            if (typeof openMapModal === 'function') openMapModal();
+            return false;
+        }
+
+        // 모든 검증 통과 시 로딩 모달(분석 애니메이션) 표시
+        document.getElementById('loadingModal').style.display = 'flex';
+    });
+</script>
+
+
+<div id="loadingModal" class="loading-modal-overlay">
+    <div class="loading-modal-content">
+        <div style="position: relative; z-index: 1;">
+            <h3>
+                <i class="fa-solid fa-satellite-dish pulse-icon"></i>
+                AI ANALYSIS
+            </h3>
+
+            <p id="loadingStatus" class="desc" style="color: #FF6B00; font-weight: bold; margin-bottom: 25px; min-height: 1.2em;">
+                도로 위 위험 요소를 분석 중입니다...
+            </p>
+
+            <div class="car-track">
+                <div id="gaugeBar" class="car-gauge-bar"></div>
+
+                <span id="trashIcon" class="trash-item" style="left: 50%;">
+                    <img id="randomObstacle" src="" style="width: 35px; height: 35px; display: none;">
+                </span>
+
+                <div id="carIcon" class="car-moving-icon">
+                    <img src="{{ url_for('static', filename='images/truck.png') }}" width="50">
+                </div>
+            </div>
+
+            <p id="progressText">0%</p>
+            <p class="completed-label">COMPLETED</p>
+
+            <p class="cancel-warning" style="color: #FF4D4D; font-size: 0.85rem; margin-top: 15px; font-weight: 500; opacity: 0.9;">
+                <i class="fa-solid fa-circle-exclamation"></i> 새로고침 시 신고가 취소됩니다
+            </p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

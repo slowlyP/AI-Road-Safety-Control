@@ -1,0 +1,78 @@
+/* =========================
+   기본 페이지 영역
+   ========================= */
+
+.page-grid {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 28px 24px 40px;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+/* =========================
+   flash 메시지
+   ========================= */
+
+.flash-message-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.toast-message {
+  padding: 14px 16px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.toast-success {
+  color: #d8ffe8;
+  background: rgba(20, 184, 106, 0.16);
+  border-color: rgba(52, 211, 153, 0.32);
+}
+
+.toast-error {
+  color: #ffe1e7;
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(251, 113, 133, 0.3);
+}
+
+/* =========================
+   섹션 공통
+   ========================= */
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.section-title-row h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.more-link {
+  font-size: 13px;
+  color: #ffb37a;
+  text-decoration: none;
+}
+
+.empty-box {
+  padding: 20px;
+  text-align: center;
+  color: #93a7cb;
+  font-size: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+}

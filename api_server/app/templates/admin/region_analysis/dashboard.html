@@ -1,0 +1,266 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}위험 지역 분석{% endblock %}
+
+{% block admin_extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_region_analysis.css') }}">
+{% endblock %}
+
+{% block admin_content %}
+  <div class="region-analysis-page">
+    <div class="region-analysis-header">
+      <div>
+        <h1>위험 지역 분석</h1>
+        <p>지역별 낙하물 사고 발생 현황을 지도와 통계로 분석합니다.</p>
+      </div>
+    </div>
+
+    <div class="region-analysis-filter-bar">
+      <div class="filter-group">
+        <label for="analysis-days">조회 기간</label>
+        <select id="analysis-days">
+          <option value="7" {% if dashboard_data.filters.days == 7 %}selected{% endif %}>최근 7일</option>
+          <option value="30" {% if dashboard_data.filters.days == 30 %}selected{% endif %}>최근 30일</option>
+          <option value="90" {% if dashboard_data.filters.days == 90 %}selected{% endif %}>최근 90일</option>
+          <option value="180" {% if dashboard_data.filters.days == 180 %}selected{% endif %}>최근 180일</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="analysis-label">사고 유형</label>
+        <select id="analysis-label">
+          <option value="all" {% if dashboard_data.filters.detected_label == 'all' %}selected{% endif %}>전체</option>
+          <option value="rock" {% if dashboard_data.filters.detected_label == 'rock' %}selected{% endif %}>낙석</option>
+          <option value="box" {% if dashboard_data.filters.detected_label == 'box' %}selected{% endif %}>박스</option>
+          <option value="bag" {% if dashboard_data.filters.detected_label == 'bag' %}selected{% endif %}>봉투류</option>
+          <option value="tire" {% if dashboard_data.filters.detected_label == 'tire' %}selected{% endif %}>타이어</option>
+          <option value="debris" {% if dashboard_data.filters.detected_label == 'debris' %}selected{% endif %}>기타
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="analysis-risk-level">위험도</label>
+        <select id="analysis-risk-level">
+          <option value="all" {% if dashboard_data.filters.risk_level == 'all' %}selected{% endif %}>전체</option>
+          <option value="주의" {% if dashboard_data.filters.risk_level == '주의' %}selected{% endif %}>주의</option>
+          <option value="위험" {% if dashboard_data.filters.risk_level == '위험' %}selected{% endif %}>위험</option>
+          <option value="긴급" {% if dashboard_data.filters.risk_level == '긴급' %}selected{% endif %}>긴급</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button type="button" id="analysis-apply-btn">적용</button>
+      </div>
+    </div>
+
+    <div class="region-summary-grid">
+      <div class="summary-card">
+        <div class="summary-label">전체 사고 건수</div>
+        <div class="summary-value" id="summary-total-incidents">{{ dashboard_data.summary.total_incidents }}</div>
+        <div class="summary-sub">현재 조건 기준 누적 사고 수</div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-label">반복 사고 지역 수</div>
+        <div class="summary-value" id="summary-hotspot-regions">{{ dashboard_data.summary.hotspot_regions }}</div>
+        <div class="summary-sub">2회 이상 발생한 지역 수</div>
+      </div>
+
+      <div class="summary-card danger">
+        <div class="summary-label">낙석 비율</div>
+        <div class="summary-value" id="summary-rock-ratio">{{ dashboard_data.summary.rock_ratio }}%</div>
+        <div class="summary-sub">전체 탐지 중 rock 비율</div>
+      </div>
+
+      <div class="summary-card emergency">
+        <div class="summary-label">긴급 사고 수</div>
+        <div class="summary-value" id="summary-emergency-count">{{ dashboard_data.summary.emergency_count }}</div>
+        <div class="summary-sub">즉시 대응이 필요한 건수</div>
+      </div>
+    </div>
+
+    <div class="district-summary-section">
+      <div class="section-header">
+        <div>
+          <h2>시군구 단위 집계</h2>
+          <p>사고 발생 밀도가 높은 행정 단위를 빠르게 파악할 수 있습니다.</p>
+        </div>
+      </div>
+
+      <div id="district-summary-grid" class="district-summary-grid">
+        {% if dashboard_data.district_summary %}
+          {% for item in dashboard_data.district_summary %}
+            <div class="district-card">
+              <div class="district-card-top">
+                <span class="district-name">{{ item.district_name }}</span>
+                <span class="district-risk-badge risk-{{ item.max_risk_level }}">{{ item.max_risk_level }}</span>
+              </div>
+              <div class="district-card-main">{{ item.incident_count }}</div>
+              <div class="district-card-label">전체 사고 건수</div>
+              <div class="district-card-meta">
+                <span>긴급 {{ item.emergency_count }}건</span>
+                <span>낙석 {{ item.rock_count }}건</span>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="district-empty">집계 가능한 지역 데이터가 없습니다.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="rock-route-section">
+      <div class="section-header">
+        <div>
+          <h2>범위 기반 낙석 분석</h2>
+          <p>선택한 검색 범위 2km 반경 내 최근 7일~180일 낙석 사고를 분석합니다.</p>
+        </div>
+      </div>
+
+      <div class="rock-route-form">
+        <div class="route-input-group">
+          <label for="rock-route-origin">검색 시작 지점</label>
+          <input type="text" id="rock-route-origin" placeholder="검색 시작 지점을 입력하세요" autocomplete="off">
+        </div>
+
+        <div class="route-input-group">
+          <label for="rock-route-destination">검색 종료 지점</label>
+          <input type="text" id="rock-route-destination" placeholder="검색 종료 지점을 입력하세요" autocomplete="off">
+        </div>
+
+        <div class="route-input-group narrow">
+          <label for="rock-route-days">조회 기간</label>
+          <select id="rock-route-days">
+            <option value="7">최근 7일</option>
+            <option value="30" selected>최근 30일</option>
+            <option value="90">최근 90일</option>
+            <option value="180">최근 180일</option>
+          </select>
+        </div>
+
+        <div class="route-action-group">
+          <button type="button" id="rock-route-analyze-btn" class="route-btn primary">범위 낙석 분석</button>
+          <button type="button" id="rock-route-reset-btn" class="route-btn secondary">초기화</button>
+        </div>
+      </div>
+
+      <div class="rock-route-summary-grid">
+        <div class="rock-focus-card main">
+          <div class="rock-focus-label">검색 범위 내 낙석 사고 수</div>
+          <div class="rock-focus-value" id="rock-route-count">0</div>
+          <div class="rock-focus-sub">검색 범위 2km 반경 기준</div>
+        </div>
+
+        <div class="rock-focus-card">
+          <div class="rock-focus-label">긴급 낙석 건수</div>
+          <div class="rock-focus-value" id="rock-route-emergency-count">0</div>
+          <div class="rock-focus-sub">즉시 대응 우선순위</div>
+        </div>
+
+        <div class="rock-focus-card">
+          <div class="rock-focus-label">최다 낙석 시군구</div>
+          <div class="rock-focus-value small" id="rock-route-top-district">-</div>
+          <div class="rock-focus-sub" id="rock-route-top-district-count">낙석 0건</div>
+        </div>
+      </div>
+
+      <div class="rock-focus-message" id="rock-route-message">
+        검색 범위를 선택하면 낙석 위험 분석 결과가 표시됩니다.
+      </div>
+
+      <div id="rock-route-result-list" class="rock-route-result-list"></div>
+
+      <div id="rock-route-pagination" class="rock-route-pagination"></div>
+    </div>
+
+    <div id="rock-route-result-list" class="rock-route-result-list"></div>
+  </div>
+
+  <div class="region-main-grid">
+    <div class="region-map-panel">
+      <div class="panel-header">
+        <div>
+          <h2>지도 기반 지역 분석</h2>
+          <p>사고가 발생한 지역을 마커와 히트맵으로 확인할 수 있습니다.</p>
+        </div>
+
+        <div class="map-view-toggle">
+          <button type="button" class="map-view-btn active" data-map-view="marker">마커 보기</button>
+          <button type="button" class="map-view-btn" data-map-view="heatmap">히트맵 보기</button>
+        </div>
+      </div>
+
+      <div id="region-analysis-map" class="region-analysis-map"></div>
+
+      <div class="heatmap-guide">
+        <span class="heatmap-guide-dot low"></span> 낮음
+        <span class="heatmap-guide-dot medium"></span> 중간
+        <span class="heatmap-guide-dot high"></span> 높음
+        <span class="heatmap-guide-text">색이 진할수록 사고 밀집도가 높습니다.</span>
+      </div>
+    </div>
+
+    <div class="region-top-panel">
+      <div class="panel-header">
+        <h2>위험 지역 TOP 10</h2>
+        <p>사고 발생 빈도가 높은 지역입니다.</p>
+      </div>
+
+      <div id="top-region-list" class="top-region-list">
+        {% if dashboard_data.top_regions %}
+          {% for item in dashboard_data.top_regions %}
+            <div class="top-region-item">
+              <div class="top-region-rank">{{ loop.index }}</div>
+              <div class="top-region-content">
+                <div class="top-region-title">{{ item.location_text }}</div>
+                <div class="top-region-meta">
+                  <span>사고 {{ item.incident_count }}건</span>
+                  <span>최대 위험도 {{ item.max_risk_level }}</span>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="top-region-empty">
+            현재 조건에 맞는 지역 데이터가 없습니다.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="region-chart-grid">
+    <div class="chart-panel">
+      <div class="panel-header">
+        <h2>사고 유형 분포</h2>
+      </div>
+      <canvas id="label-distribution-chart"></canvas>
+    </div>
+
+    <div class="chart-panel">
+      <div class="panel-header">
+        <h2>위험도 분포</h2>
+      </div>
+      <canvas id="risk-distribution-chart"></canvas>
+    </div>
+  </div>
+  </div>
+
+  <script>
+      window.REGION_ANALYSIS_CONFIG = {
+          dataApiUrl: "{{ url_for('admin_region_analysis.get_region_analysis_data') }}",
+          initialData: {{ dashboard_data | tojson }}
+      };
+  </script>
+{% endblock %}
+
+{% block admin_extra_js %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="{{ url_for('static', filename='js/admin_region_analysis.js') }}"></script>
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places,visualization&callback=initRegionAnalysisMap"
+    async
+    defer
+  ></script>
+{% endblock %}

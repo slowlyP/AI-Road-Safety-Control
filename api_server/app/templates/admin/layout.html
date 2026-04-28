@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}관리자 페이지{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_common.css') }}">
+  {% block admin_extra_css %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+  <div class="admin-page" id="adminPage">
+
+    {% include "admin/_sidebar.html" %}
+
+    <button
+      type="button"
+      id="sidebarToggle"
+      class="admin-sidebar-toggle"
+      aria-label="사이드바 접기/펼치기"
+      aria-expanded="true"
+      title="사이드바 접기"
+    >
+      ←
+    </button>
+
+    <main class="admin-content">
+      <div class="admin-content-shell">
+        {% block admin_content %}{% endblock %}
+      </div>
+    </main>
+
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const adminPage = document.getElementById("adminPage");
+      const toggleButton = document.getElementById("sidebarToggle");
+      const storageKey = "adminSidebarCollapsed";
+
+      if (!adminPage || !toggleButton) return;
+
+      function applyState() {
+        const collapsed = adminPage.classList.contains("sidebar-collapsed");
+
+        toggleButton.textContent = collapsed ? "→" : "←";
+        toggleButton.setAttribute("aria-expanded", String(!collapsed));
+        toggleButton.setAttribute(
+          "title",
+          collapsed ? "사이드바 펼치기" : "사이드바 접기"
+        );
+      }
+
+      const savedState = localStorage.getItem(storageKey);
+      if (savedState === "true") {
+        adminPage.classList.add("sidebar-collapsed");
+      }
+
+      applyState();
+
+      toggleButton.addEventListener("click", function () {
+        adminPage.classList.toggle("sidebar-collapsed");
+
+        const collapsed = adminPage.classList.contains("sidebar-collapsed");
+        localStorage.setItem(storageKey, collapsed ? "true" : "false");
+
+        applyState();
+      });
+    });
+  </script>
+
+  {% block admin_extra_js %}{% endblock %}
+{% endblock %}

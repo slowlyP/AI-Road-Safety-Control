@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}게시글 작성{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/board.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper board-form-page">
+  <section class="board-form-section">
+    <div class="board-form-container">
+
+      <!-- 상단 -->
+      <div class="board-form-topbar">
+        <a href="{{ url_for('board.board_list') }}" class="board-back-link">← 자유게시판 목록</a>
+      </div>
+
+      <!-- 작성 카드 -->
+      <div class="board-form-card">
+        <div class="board-form-head">
+          <span class="board-page-badge">WRITE POST</span>
+          <h1>게시글 작성</h1>
+          <p>자유롭게 의견을 남겨보세요.</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('board.board_create') }}" class="board-write-form">
+          <div class="board-form-group">
+            <label for="title">제목</label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              class="board-form-input"
+              value="{{ title if title else '' }}"
+              placeholder="제목을 입력해주세요."
+              maxlength="200"
+              required
+            >
+          </div>
+
+          <div class="board-form-group">
+            <label for="content">내용</label>
+            <textarea
+              id="content"
+              name="content"
+              class="board-form-textarea"
+              rows="14"
+              placeholder="내용을 입력해주세요."
+              required
+            >{{ content if content else '' }}</textarea>
+          </div>
+
+          <div class="board-form-actions">
+            <a href="{{ url_for('board.board_list') }}" class="btn btn-outline">취소</a>
+            <button type="submit" class="btn btn-primary">등록하기</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </section>
+</div>
+{% endblock %}

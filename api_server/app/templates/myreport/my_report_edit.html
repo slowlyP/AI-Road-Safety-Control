@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}신고 수정 | 404 R·N·F AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/report_edit.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="edit-page">
+
+  <!-- flash 메시지 출력 -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+      <div class="toast-message toast-{{ category }}" id="toast-message">
+        {{ message }}
+      </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- 상단 헤더 -->
+  <div class="edit-header">
+    <div>
+      <h2 class="edit-page-title">신고 수정</h2>
+      <p class="edit-page-subtitle">등록한 신고 내용을 수정할 수 있습니다.</p>
+    </div>
+
+    <a
+      href="{{ url_for('report_list.my_report_detail_page', report_id=report.id) }}"
+      class="back-btn"
+    >
+      상세보기로
+    </a>
+  </div>
+
+  <section class="edit-card">
+    <form
+      action="{{ url_for('report_list.update_report', report_id=report.id) }}"
+      method="post"
+      enctype="multipart/form-data"
+      class="edit-form"
+    >
+      <!-- 기존 파일 삭제 여부 -->
+      <input type="hidden" name="delete_file" id="delete_file" value="N">
+
+      <!-- 제목 -->
+      <div class="edit-form-group">
+        <label for="title" class="edit-label">제목</label>
+        <input
+          type="text"
+          id="title"
+          name="title"
+          class="edit-input"
+          value="{{ report.title or '' }}"
+          placeholder="제목을 입력하세요"
+        >
+      </div>
+
+      <!-- 신고 유형 -->
+      <div class="edit-form-group">
+        <label class="edit-label">신고 유형 (AI 분석)</label>
+        <div class="edit-readonly-box">
+          {{ report.report_type or "AI 분석 예정" }}
+        </div>
+      </div>
+
+      <!-- 위치 -->
+      <div class="edit-form-group">
+        <label for="location_text" class="edit-label">위치</label>
+        <input
+          type="text"
+          id="location_text"
+          name="location_text"
+          class="edit-input"
+          value="{{ report.location_text or '' }}"
+          placeholder="위치를 입력하세요"
+        >
+      </div>
+
+      <!-- 신고 내용 -->
+      <div class="edit-form-group">
+        <label for="content" class="edit-label">신고 내용</label>
+        <textarea
+          id="content"
+          name="content"
+          class="edit-textarea"
+          placeholder="신고 내용을 입력하세요"
+        >{{ report.content or '' }}</textarea>
+      </div>
+
+      <!-- 기존 첨부파일 -->
+      <div class="edit-form-group">
+        <label class="edit-label">등록된 첨부파일</label>
+
+        <div class="edit-file-preview" id="edit-file-preview">
+          {% if report.file_url %}
+          <div class="edit-file-preview-item">
+            <div
+              id="existing-file-box"
+              data-file-url="{{ report.file_url }}"
+              data-file-type="{{ report.file_type }}"
+            ></div>
+
+            <button
+              type="button"
+              id="delete-existing-file-btn"
+              class="delete-file-btn"
+            >
+              기존 파일 삭제
+            </button>
+          </div>
+          {% else %}
+          <p class="edit-file-empty-text">
+            등록된 첨부파일이 없습니다.
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 새 파일 업로드 -->
+      <div class="edit-form-group">
+        <label class="edit-label">새 이미지 / 영상 업로드</label>
+
+        <div class="edit-file-upload-wrap">
+          <label for="new_file" class="edit-file-upload-btn">
+            📎 파일 선택
+          </label>
+
+          <span id="edit-file-name" class="edit-file-name">
+            선택된 파일 없음
+          </span>
+
+          <input
+            type="file"
+            id="new_file"
+            name="new_file"
+            class="edit-file-input"
+            accept="image/*,video/*"
+          >
+        </div>
+
+        <p class="edit-file-help">
+          새 파일을 선택하면 기존 첨부파일 대신 교체되며, AI 재분석이 진행됩니다.
+        </p>
+      </div>
+
+      <!-- 저장 / 취소 -->
+      <div class="edit-form-buttons">
+        <button type="submit" class="save-btn">저장</button>
+
+        <a
+          href="{{ url_for('report_list.my_report_detail_page', report_id=report.id) }}"
+          class="cancel-btn"
+        >
+          취소
+        </a>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/my_report_edit.js') }}"></script>
+
+<div id="loadingModal" class="loading-modal-overlay">
+  <div class="loading-modal-content">
+    <div style="position: relative; z-index: 1;">
+      <h3>
+        <i class="fa-solid fa-satellite-dish pulse-icon"></i>
+        AI ANALYSIS
+      </h3>
+
+      <p
+        id="loadingStatus"
+        class="desc"
+        style="color: #FF6B00; font-weight: bold; margin-bottom: 25px; min-height: 1.2em;"
+      >
+        도로 위 위험 요소를 분석 중입니다...
+      </p>
+
+      <div class="car-track">
+        <div id="gaugeBar" class="car-gauge-bar"></div>
+
+        <span id="trashIcon" class="trash-item" style="left: 50%;">
+          <img id="randomObstacle" src="" style="width: 35px; height: 35px; display: none;">
+        </span>
+
+        <div id="carIcon" class="car-moving-icon">
+          <img src="{{ url_for('static', filename='images/truck.png') }}" width="50">
+        </div>
+      </div>
+
+      <p id="progressText">0%</p>
+      <p class="completed-label">COMPLETED</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

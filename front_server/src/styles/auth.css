@@ -1,0 +1,127 @@
+.auth-container {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+.auth-box {
+  background: #1a2235;
+  width: 100%;
+  max-width: 450px;
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.logo-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #ff6b00, #ff4d4d);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.auth-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.auth-header p {
+  color: #a0aec0;
+  font-size: 14px;
+}
+
+.auth-error {
+  background: rgba(229, 62, 62, 0.1);
+  border: 1px solid rgba(229, 62, 62, 0.3);
+  color: #fc8181;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.auth-form .input-group {
+  margin-bottom: 20px;
+}
+
+.auth-form .input-group label {
+  display: block;
+  color: #cbd5e0;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.auth-form .input-group input {
+  width: 100%;
+  background: #0f172a;
+  border: 1px solid #4a5568;
+  padding: 14px 16px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 15px;
+  transition: all 0.2s;
+}
+
+.auth-form .input-group input:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 1px #3182ce;
+}
+
+.auth-form .btn-primary {
+  width: 100%;
+  background: linear-gradient(135deg, #3182ce, #2b6cb0);
+  color: white;
+  border: none;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin-top: 10px;
+}
+
+.auth-form .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(49, 130, 206, 0.4);
+}
+
+.auth-form .btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.auth-footer {
+  margin-top: 25px;
+  text-align: center;
+  font-size: 14px;
+  color: #a0aec0;
+}
+
+.auth-footer a {
+  color: #63b3ed;
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 5px;
+}
+
+.auth-footer a:hover {
+  text-decoration: underline;
+}

@@ -1,0 +1,162 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}회원 관리{% endblock %}
+
+{% block admin_extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_users.css') }}">
+{% endblock %}
+
+{% block admin_content %}
+
+<section class="admin-panel">
+
+  <div class="admin-page-header">
+    <div>
+      <h1 class="admin-page-title">회원 관리</h1>
+      <p class="admin-page-desc">
+        전체 회원 목록을 조회하고 권한, 상세 정보, 신고 이력을 관리할 수 있습니다.
+      </p>
+    </div>
+  </div>
+
+  <div class="panel-header">
+    <div>
+      <h2 class="panel-title">회원 목록</h2>
+      <p class="panel-desc">검색, 권한 필터, 페이지 이동이 가능합니다.</p>
+    </div>
+  </div>
+
+  <!-- 검색 / 필터 -->
+  <form method="GET" action="{{ url_for('admin_user.user_list') }}" class="user-filter-form">
+    <div class="user-filter-row">
+
+      <div class="user-filter-group">
+        <label for="keyword">검색</label>
+        <input
+          type="text"
+          id="keyword"
+          name="keyword"
+          value="{{ keyword }}"
+          placeholder="이름 또는 아이디 검색"
+          class="form-input"
+        >
+      </div>
+
+      <div class="user-filter-group">
+        <label for="role">권한</label>
+        <select id="role" name="role" class="form-select">
+          <option value="">전체</option>
+          <option value="user" {% if role == "user" %}selected{% endif %}>일반회원</option>
+          <option value="admin" {% if role == "admin" %}selected{% endif %}>관리자</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button type="submit" class="btn">검색</button>
+        <a href="{{ url_for('admin_user.user_list') }}" class="btn-secondary">초기화</a>
+      </div>
+
+    </div>
+  </form>
+
+  <div class="table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>아이디</th>
+          <th>이름</th>
+          <th>이메일</th>
+          <th>권한</th>
+          <th>가입일</th>
+          <th>상세</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% if users %}
+          {% for user in users %}
+            <tr>
+              <td>{{ user.id }}</td>
+              <td>{{ user.username }}</td>
+              <td>{{ user.name }}</td>
+              <td>{{ user.email }}</td>
+
+              <td>
+                {% if user.role == "admin" %}
+                  <span class="badge badge-danger">관리자</span>
+                {% else %}
+                  <span class="badge badge-success">일반회원</span>
+                {% endif %}
+              </td>
+
+              <td>{{ user.created_at }}</td>
+
+              <td>
+                <a
+                  href="{{ url_for('admin_user.user_detail', user_id=user.id) }}"
+                  class="btn-secondary"
+                >
+                  상세보기
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="7" class="empty-message">
+              조건에 맞는 회원이 없습니다.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 페이지네이션 -->
+  {% if pagination.pages > 1 %}
+    <div class="pagination-wrap">
+      <div class="pagination">
+
+        {% if pagination.has_prev %}
+          <a
+            href="{{ url_for('admin_user.user_list', page=pagination.prev_num, keyword=keyword, role=role) }}"
+            class="page-btn"
+          >
+            이전
+          </a>
+        {% endif %}
+
+        {% for page_num in pagination.iter_pages() %}
+          {% if page_num %}
+            {% if page_num == pagination.page %}
+              <span class="page-btn active">{{ page_num }}</span>
+            {% else %}
+              <a
+                href="{{ url_for('admin_user.user_list', page=page_num, keyword=keyword, role=role) }}"
+                class="page-btn"
+              >
+                {{ page_num }}
+              </a>
+            {% endif %}
+          {% else %}
+            <span class="page-ellipsis">...</span>
+          {% endif %}
+        {% endfor %}
+
+        {% if pagination.has_next %}
+          <a
+            href="{{ url_for('admin_user.user_list', page=pagination.next_num, keyword=keyword, role=role) }}"
+            class="page-btn"
+          >
+            다음
+          </a>
+        {% endif %}
+
+      </div>
+    </div>
+  {% endif %}
+
+</section>
+
+{% endblock %}

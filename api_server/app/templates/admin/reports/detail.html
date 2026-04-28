@@ -1,0 +1,306 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}신고 상세{% endblock %}
+
+{% block admin_extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_reports.css') }}">
+{% endblock %}
+
+{% block admin_content %}
+<section class="admin-panel">
+
+  <div class="admin-page-header report-page-header">
+    <div>
+      <h1 class="admin-page-title">신고 상세</h1>
+      <p class="admin-page-desc">
+        신고 상세 내용을 확인하고 처리 상태를 변경할 수 있습니다.
+      </p>
+    </div>
+
+    <div class="report-page-actions">
+      <a href="{{ url_for('admin_report.report_list') }}" class="btn btn-outline">
+        목록으로
+      </a>
+
+      <form
+        method="POST"
+        action="{{ url_for('admin_report.run_compare_analysis', report_id=report.id) }}"
+        id="compareAnalysisForm"
+        style="display:inline;"
+      >
+        <button type="submit" class="btn btn-primary">
+          AI 비교분석 실행
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+
+    <!-- 신고 기본 정보 -->
+    <div class="detail-card">
+      <h2 class="detail-card-title">신고 정보</h2>
+
+      <div class="detail-info-grid">
+        <div class="detail-item">
+          <span class="detail-label">신고 ID</span>
+          <div class="detail-value">#{{ report.id }}</div>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">신고 방식</span>
+          <div class="detail-value">{{ report.report_type or '-' }}</div>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">위험도</span>
+          <div class="detail-value">{{ report.risk_level or '-' }}</div>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">현재 상태</span>
+          <div class="detail-value">{{ report.status or '-' }}</div>
+        </div>
+
+        <div class="detail-item detail-item-full">
+          <span class="detail-label">제목</span>
+          <div class="detail-value">{{ report.title or '-' }}</div>
+        </div>
+
+        <div class="detail-item detail-item-full">
+          <span class="detail-label">위치</span>
+          <div class="detail-value">{{ report.location_text or '위치 정보 없음' }}</div>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">등록일</span>
+          <div class="detail-value">{{ report.created_at }}</div>
+        </div>
+
+        <div class="detail-item detail-item-full">
+          <span class="detail-label">신고 내용</span>
+          <div class="detail-value detail-content-box">
+            {{ report.content or '신고 내용이 없습니다.' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 상태 변경 + 상태 이력 -->
+    <div class="detail-card">
+      <h2 class="detail-card-title">상태 변경</h2>
+
+      <form
+        method="POST"
+        action="{{ url_for('admin_report.update_report_status', report_id=report.id) }}"
+        class="status-form"
+      >
+        <div class="status-current-box">
+          <span class="status-current-label">현재 상태</span>
+
+          {% if report.status == '처리완료' %}
+            <span class="badge badge-success">{{ report.status }}</span>
+          {% elif report.status == '오탐' %}
+            <span class="badge badge-secondary">{{ report.status }}</span>
+          {% elif report.status == '확인중' %}
+            <span class="badge badge-warning">{{ report.status }}</span>
+          {% else %}
+            <span class="badge badge-status">{{ report.status }}</span>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="status" class="form-label">변경할 상태</label>
+          <select id="status" name="status" class="form-select" required>
+            <option value="">상태 선택</option>
+            <option value="접수" {% if report.status == '접수' %}selected{% endif %}>접수</option>
+            <option value="확인중" {% if report.status == '확인중' %}selected{% endif %}>확인중</option>
+            <option value="처리완료" {% if report.status == '처리완료' %}selected{% endif %}>처리완료</option>
+            <option value="오탐" {% if report.status == '오탐' %}selected{% endif %}>오탐</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="memo" class="form-label">관리 메모</label>
+          <textarea
+            id="memo"
+            name="memo"
+            class="form-textarea"
+            rows="4"
+            placeholder="상태 변경 사유 또는 메모를 입력하세요."
+          ></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+          상태 변경 저장
+        </button>
+      </form>
+
+      <div class="section-divider"></div>
+
+      <h2 class="detail-card-title">상태 변경 이력</h2>
+
+      {% if status_logs %}
+        <div class="history-list status-log-scroll-box">
+          {% for log in status_logs %}
+            <div class="history-item">
+              <div class="history-main">
+                <strong>{{ log.old_status or '없음' }}</strong>
+                →
+                <strong>{{ log.new_status }}</strong>
+              </div>
+              <div class="history-sub">
+                변경자: {{ log.changed_by_name }} /
+                메모: {{ log.memo or '-' }} /
+                일시: {{ log.created_at }}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-box">
+          상태 변경 이력이 없습니다.
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- 첨부 파일 -->
+    <div class="detail-card detail-card-full">
+      <h2 class="detail-card-title">첨부 파일</h2>
+
+      {% if files %}
+        <div class="report-file-grid">
+          {% for file in files %}
+            <div class="report-file-card">
+              <div class="report-file-meta">
+                <div class="report-file-name">{{ file.original_name }}</div>
+                <div class="report-file-type">{{ file.file_type }}</div>
+              </div>
+
+              {% if file.file_type == '이미지' %}
+              <div class="report-file-preview media-preview-fixed media-wrapper" data-file-id="{{ file.id }}">
+                <img
+                  src="{{ url_for('static', filename=file.preview_path) }}"
+                  alt="{{ file.original_name }}"
+                  class="report-preview-image"
+                  id="image-{{ file.id }}"
+                >
+                <canvas class="media-canvas" id="canvas-{{ file.id }}"></canvas>
+              </div>
+
+            {% elif file.file_type == '영상' %}
+              <div class="report-file-preview media-preview-fixed media-wrapper" data-file-id="{{ file.id }}">
+                <video controls class="report-preview-video" id="video-{{ file.id }}">
+                  <source src="{{ url_for('static', filename=file.preview_path) }}" type="video/mp4">
+                  브라우저가 video 태그를 지원하지 않습니다.
+                </video>
+                <canvas class="media-canvas" id="canvas-{{ file.id }}"></canvas>
+              </div>
+            {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-box">
+          첨부된 파일이 없습니다.
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- AI 분석 결과 -->
+    <div class="detail-card detail-card-full">
+      <h2 class="detail-card-title">AI 분석 결과</h2>
+
+      <div class="ai-result-grid">
+        <!-- 왼쪽: 객체별 탐지 요약 -->
+        <div class="ai-result-panel">
+          <h3 class="ai-panel-title">객체별 탐지 요약</h3>
+          <div id="ai-summary-box" class="ai-summary-box"></div>
+        </div>
+
+        <!-- 오른쪽: 분석 결과 이력 -->
+        <div class="ai-result-panel">
+          <h3 class="ai-panel-title">분석 결과 이력</h3>
+          <div id="ai-history-box" class="history-list ai-scroll-box"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <br>
+  <!-- 비교분석 이력 -->
+<div class="detail-card detail-card-full">
+  <h2 class="detail-card-title">AI 비교분석 이력</h2>
+
+  {% if compare_runs %}
+    <div class="history-list ai-scroll-box">
+      {% for run in compare_runs %}
+        <div class="history-item">
+          <div class="history-main">
+            <strong>실행 ID:</strong> {{ run.id }}
+            /
+            <strong>상태:</strong> {{ run.status }}
+          </div>
+
+          <div class="history-sub">
+            실행일시: {{ run.created_at }}
+          </div>
+
+          <div style="margin-top: 8px;">
+            <a
+              href="{{ url_for('admin_report.compare_detail', compare_run_id=run.id) }}"
+              class="btn btn-sm btn-outline"
+            >
+              상세 보기
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-box">
+      비교분석 이력이 없습니다.
+    </div>
+  {% endif %}
+</div>
+</section>
+
+<div id="loadingModal" class="loading-modal-overlay" aria-hidden="true">
+  <div class="loading-modal-content">
+    <div style="position: relative; z-index: 1;">
+      <h3>
+        <span class="pulse-icon">AI</span>
+        COMPARISON
+      </h3>
+
+      <p id="loadingStatus" class="desc" style="color: #FF6B00; font-weight: bold; margin-bottom: 25px; min-height: 1.2em;">
+        비교분석을 준비 중입니다...
+      </p>
+
+      <div class="car-track">
+        <div id="gaugeBar" class="car-gauge-bar"></div>
+
+        <span id="trashIcon" class="trash-item" style="left: 50%;">
+          <img id="randomObstacle" src="" style="width: 35px; height: 35px; display: none;">
+        </span>
+
+        <div id="carIcon" class="car-moving-icon">
+          <img src="{{ url_for('static', filename='images/truck.png') }}" width="50" alt="truck">
+        </div>
+      </div>
+
+      <p id="progressText">0%</p>
+      <p class="completed-label">COMPLETED</p>
+
+      <p class="cancel-warning" style="color: #FF4D4D; font-size: 0.85rem; margin-top: 15px; font-weight: 500; opacity: 0.9;">
+        새로고침 시 비교분석이 취소될 수 있습니다
+      </p>
+    </div>
+  </div>
+</div>
+
+<script id="ai-analysis-data" type="application/json">
+  {{ ai_analysis | tojson }}
+</script>
+<script src="{{ url_for('static', filename='js/admin_report_detail.js') }}"></script>
+{% endblock %}

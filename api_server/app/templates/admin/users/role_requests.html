@@ -1,0 +1,160 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}권한 신청 관리{% endblock %}
+
+{% block admin_extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_users.css') }}">
+{% endblock %}
+
+{% block admin_content %}
+
+<section class="admin-panel">
+
+  <div class="admin-page-header">
+    <div>
+      <h1 class="admin-page-title">권한 신청 관리</h1>
+      <p class="admin-page-desc">
+        관리자 권한 신청 내역을 조회하고 승인 또는 거절할 수 있습니다.
+      </p>
+    </div>
+  </div>
+
+  <form method="GET" action="{{ url_for('admin_user.role_request_list') }}" class="user-filter-form">
+    <div class="user-filter-row">
+
+      <div class="user-filter-group">
+        <label for="keyword">검색</label>
+        <input
+          type="text"
+          id="keyword"
+          name="keyword"
+          value="{{ keyword }}"
+          placeholder="이름 또는 아이디 검색"
+          class="form-input"
+        >
+      </div>
+
+      <div class="user-filter-group">
+        <label for="status">상태</label>
+        <select id="status" name="status" class="form-select">
+          <option value="">전체</option>
+          <option value="대기" {% if status == "대기" %}selected{% endif %}>대기</option>
+          <option value="승인" {% if status == "승인" %}selected{% endif %}>승인</option>
+          <option value="거절" {% if status == "거절" %}selected{% endif %}>거절</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button type="submit" class="btn">검색</button>
+        <a href="{{ url_for('admin_user.role_request_list') }}" class="btn-secondary">초기화</a>
+      </div>
+
+    </div>
+  </form>
+
+  <div class="table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>회원</th>
+          <th class="text-left">신청 사유</th>
+          <th>상태</th>
+          <th>신청일</th>
+          <th>처리</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% if requests %}
+          {% for req in requests %}
+            <tr>
+              <td>{{ req.id }}</td>
+              <td>{{ req.name }} ({{ req.username }})</td>
+              <td class="text-left">{{ req.request_reason }}</td>
+              <td>
+                {% if req.status == "승인" %}
+                  <span class="badge badge-success">{{ req.status }}</span>
+                {% elif req.status == "거절" %}
+                  <span class="badge badge-danger">{{ req.status }}</span>
+                {% else %}
+                  <span class="badge badge-pending">{{ req.status }}</span>
+                {% endif %}
+              </td>
+              <td>{{ req.created_at }}</td>
+              <td>
+                {% if req.status == "대기" %}
+                  <div style="display:flex; gap:8px; justify-content:center;">
+                    <form method="POST" action="{{ url_for('admin_user.review_role_request', request_id=req.id) }}">
+                      <input type="hidden" name="status" value="승인">
+                      <button type="submit" class="btn">승인</button>
+                    </form>
+
+                    <form method="POST" action="{{ url_for('admin_user.review_role_request', request_id=req.id) }}">
+                      <input type="hidden" name="status" value="거절">
+                      <button type="submit" class="btn-danger">거절</button>
+                    </form>
+                  </div>
+                {% else %}
+                  <span class="text-muted">처리완료</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="6" class="empty-message">
+              권한 신청 내역이 없습니다.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if pagination.pages > 1 %}
+    <div class="pagination-wrap">
+      <div class="pagination">
+
+        {% if pagination.has_prev %}
+          <a
+            href="{{ url_for('admin_user.role_request_list', page=pagination.prev_num, keyword=keyword, status=status) }}"
+            class="page-btn"
+          >
+            이전
+          </a>
+        {% endif %}
+
+        {% for page_num in pagination.iter_pages() %}
+          {% if page_num %}
+            {% if page_num == pagination.page %}
+              <span class="page-btn active">{{ page_num }}</span>
+            {% else %}
+              <a
+                href="{{ url_for('admin_user.role_request_list', page=page_num, keyword=keyword, status=status) }}"
+                class="page-btn"
+              >
+                {{ page_num }}
+              </a>
+            {% endif %}
+          {% else %}
+            <span class="page-ellipsis">...</span>
+          {% endif %}
+        {% endfor %}
+
+        {% if pagination.has_next %}
+          <a
+            href="{{ url_for('admin_user.role_request_list', page=pagination.next_num, keyword=keyword, status=status) }}"
+            class="page-btn"
+          >
+            다음
+          </a>
+        {% endif %}
+
+      </div>
+    </div>
+  {% endif %}
+
+</section>
+
+{% endblock %}

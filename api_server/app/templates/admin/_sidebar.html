@@ -1,0 +1,122 @@
+{% set endpoint = request.endpoint or '' %}
+
+<aside class="admin-sidebar">
+  <div class="admin-sidebar-inner">
+
+    <div class="admin-sidebar-header">
+      <h2>관리자</h2>
+      <p>운영 · 모니터링 · 분석</p>
+    </div>
+
+    <nav class="admin-nav">
+
+      <!-- 개요 -->
+      <div class="admin-nav-group">
+        <p class="admin-nav-group-title">개요</p>
+        <ul class="admin-nav-list">
+          <li class="admin-nav-item">
+            <a
+              href="{{ url_for('admin.dashboard') }}"
+              class="admin-nav-link {% if endpoint == 'admin.dashboard' %}active{% endif %}"
+            >
+              <span class="admin-nav-text">대시보드</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 운영 -->
+      <div class="admin-nav-group">
+        <p class="admin-nav-group-title">운영</p>
+        <ul class="admin-nav-list">
+          <li class="admin-nav-item">
+            <a
+              href="{{ url_for('admin_user.user_list') }}"
+              class="admin-nav-link {% if endpoint.startswith('admin_user.') and not endpoint.startswith('admin_user.role_request') %}active{% endif %}"
+            >
+              <span class="admin-nav-text">회원 관리</span>
+            </a>
+          </li>
+
+          <li class="admin-nav-item">
+            <a
+              href="{{ url_for('admin_user.role_request_list') }}"
+              class="admin-nav-link {% if endpoint.startswith('admin_user.role_request') %}active{% endif %}"
+            >
+              <span class="admin-nav-text">권한 신청</span>
+              {% if admin_pending_role_count > 0 %}
+                <span class="admin-side-badge admin-side-badge--warning">
+                  {{ admin_pending_role_count }}
+                </span>
+              {% endif %}
+            </a>
+          </li>
+
+          <li class="admin-nav-item">
+            <a
+              href="{{ url_for('admin_report.report_list') }}"
+              class="admin-nav-link {% if endpoint.startswith('admin_report.') %}active{% endif %}"
+            >
+              <span class="admin-nav-text">신고 관리</span>
+              {% if admin_pending_report_count > 0 %}
+                <span class="admin-side-badge admin-side-badge--warning">
+                  {{ admin_pending_report_count }}
+                </span>
+              {% endif %}
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 모니터링 -->
+      <div class="admin-nav-group">
+        <p class="admin-nav-group-title">모니터링</p>
+        <ul class="admin-nav-list">
+          <li class="admin-nav-item">
+            <a
+              href="{{ url_for('admin_realtime_alert.realtime_alert_page') }}"
+              class="admin-nav-link {% if endpoint.startswith('admin_realtime_alert.') %}active{% endif %}"
+            >
+              <span class="admin-nav-text">실시간 알림</span>
+              <span id="realtime-alert-badge" class="admin-side-badge admin-side-badge--danger realtime-alert-badge is-hidden">
+                0
+              </span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 분석 -->
+      <div class="admin-nav-group">
+        <p class="admin-nav-group-title">분석</p>
+        <ul class="admin-nav-list">
+          <li class="admin-nav-item">
+            <a
+              href="{{ url_for('admin_region_analysis.region_analysis_page') }}"
+              class="admin-nav-link {% if endpoint.startswith('admin_region_analysis.') %}active{% endif %}"
+            >
+              <span class="admin-nav-text">위험 지역 분석</span>
+            </a>
+          </li>
+
+          <li class="admin-nav-item">
+            <a
+              href="{{ url_for('admin_ai.summary') }}"
+              class="admin-nav-link {% if endpoint.startswith('admin_ai.') %}active{% endif %}"
+            >
+              <span class="admin-nav-text">AI 분석</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+    </nav>
+
+    <div class="admin-sidebar-footer">
+      <a href="{{ url_for('main.index') }}" class="admin-back-link">
+        메인으로 돌아가기
+      </a>
+    </div>
+
+  </div>
+</aside>

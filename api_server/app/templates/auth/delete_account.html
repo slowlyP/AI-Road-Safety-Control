@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}회원 탈퇴 | 404 R·N·F AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+<style>
+.warning-box {
+  margin: 20px 0 24px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.22);
+}
+
+.warning-box h3 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  color: #fecaca;
+}
+
+.warning-box ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #f3d0d0;
+  line-height: 1.7;
+}
+
+.auth-info-box {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.auth-info-item {
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.auth-info-item strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #ffffff;
+}
+
+.auth-info-item p {
+  margin: 0;
+  color: #c8d2e8;
+  line-height: 1.6;
+}
+
+.form-help {
+  margin: 2px 0 0;
+  font-size: 0.88rem;
+  color: #98a6c4;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.btn-line,
+.btn-danger {
+  flex: 1;
+  height: 50px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.btn-line {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: #ffffff;
+}
+
+.btn-line:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.btn-danger {
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: #ffffff;
+}
+
+.btn-danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(220, 38, 38, 0.22);
+}
+
+@media (max-width: 640px) {
+  .form-actions {
+    flex-direction: column;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+  <div class="auth-container">
+    <aside class="auth-left">
+      <div class="auth-badge" style="background:#fff1f2; color:#dc2626; border-color:rgba(220,38,38,0.25);">
+        계정 삭제
+      </div>
+      <h1>회원 탈퇴</h1>
+      <p class="auth-desc">
+        회원 탈퇴 시 계정은 비활성화 처리되며<br>
+        일부 정보는 복구가 어려울 수 있습니다.
+      </p>
+
+      <div class="auth-info-box">
+        <div class="auth-info-item">
+          <strong>탈퇴 처리</strong>
+          <p>계정은 즉시 비활성화되며 로그인할 수 없게 됩니다.</p>
+        </div>
+        <div class="auth-info-item">
+          <strong>주의</strong>
+          <p>일부 신고 기록 및 로그 정보는 운영 정책에 따라 보관될 수 있습니다.</p>
+        </div>
+        <div class="auth-info-item">
+          <strong>본인 확인</strong>
+          <p>비밀번호 입력 후 탈퇴가 진행됩니다.</p>
+        </div>
+      </div>
+    </aside>
+
+    <section class="auth-card">
+      <h2>계정 탈퇴 확인</h2>
+      <p class="auth-subtext">아래 내용을 확인한 뒤 비밀번호를 입력하세요.</p>
+
+      <div class="warning-box">
+        <h3>탈퇴 전 확인사항</h3>
+        <ul>
+          <li>탈퇴 후에는 현재 계정으로 다시 로그인할 수 없습니다.</li>
+          <li>일부 계정 정보는 복구가 불가능할 수 있습니다.</li>
+          <li>운영 및 보안 목적으로 일부 기록은 내부 정책에 따라 유지될 수 있습니다.</li>
+        </ul>
+      </div>
+
+      <form id="deleteAccountForm" class="auth-form">
+        <div class="form-group">
+          <label for="password">비밀번호 확인</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="비밀번호를 입력하세요"
+            required
+          >
+          <p class="form-help">본인 확인을 위해 현재 비밀번호를 입력해야 합니다.</p>
+        </div>
+
+        <p id="deleteAccountMessage" class="form-message"></p>
+
+        <div class="form-actions">
+          <a href="{{ url_for('report_list.my_reports_page') }}" class="btn-line">취소</a>
+          <button type="submit" class="btn-danger">회원 탈퇴</button>
+        </div>
+      </form>
+    </section>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("deleteAccountForm");
+  if (!form) return;
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const password = document.getElementById("password").value.trim();
+    const messageBox = document.getElementById("deleteAccountMessage");
+
+    if (!confirm("정말 회원 탈퇴를 진행하시겠습니까?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/auth/delete-account", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ password })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        messageBox.textContent = result.message;
+        messageBox.style.color = "#16a34a";
+
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 1000);
+      } else {
+        messageBox.textContent = result.message || "회원 탈퇴에 실패했습니다.";
+        messageBox.style.color = "#dc2626";
+      }
+    } catch (error) {
+      messageBox.textContent = "서버 요청 중 오류가 발생했습니다.";
+      messageBox.style.color = "#dc2626";
+    }
+  });
+});
+</script>
+{% endblock %}

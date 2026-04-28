@@ -1,0 +1,223 @@
+{% extends "admin/layout.html" %}
+{#
+  관리자 신고 목록 페이지
+#}
+
+{% block title %}신고 관리{% endblock %}
+
+{% block admin_content %}
+
+<section class="admin-panel">
+
+  <div class="admin-page-header report-page-header">
+    <div>
+      <h1 class="admin-page-title">신고 관리</h1>
+      <p class="admin-page-desc">
+        사용자 신고 목록을 확인하고 상세 페이지에서 처리 상태를 관리할 수 있습니다.
+      </p>
+    </div>
+
+    <div class="report-page-summary">
+      <span class="report-summary-label">전체 신고</span>
+      <strong class="report-summary-value">{{ pagination.total }}</strong>
+    </div>
+  </div>
+
+  <div class="report-list-card">
+
+    <div class="panel-header">
+      <div>
+        <h2 class="panel-title">신고 목록</h2>
+        <p class="panel-desc">최신 등록 순으로 신고 데이터를 표시합니다.</p>
+      </div>
+    </div>
+
+    <!-- 검색 / 필터 -->
+    <form method="GET" action="{{ url_for('admin_report.report_list') }}" class="admin-filter-form">
+      <div class="filter-row">
+
+        <div class="filter-group">
+          <label for="keyword">검색</label>
+          <input
+            type="text"
+            id="keyword"
+            name="keyword"
+            value="{{ keyword }}"
+            placeholder="제목 검색"
+            class="form-input"
+          >
+        </div>
+
+        <div class="filter-group">
+          <label for="status">상태</label>
+          <select id="status" name="status" class="form-select">
+            <option value="">전체</option>
+            <option value="접수" {% if status == "접수" %}selected{% endif %}>접수</option>
+            <option value="확인중" {% if status == "확인중" %}selected{% endif %}>확인중</option>
+            <option value="처리완료" {% if status == "처리완료" %}selected{% endif %}>처리완료</option>
+            <option value="오탐" {% if status == "오탐" %}selected{% endif %}>오탐</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="risk_level">위험도</label>
+          <select id="risk_level" name="risk_level" class="form-select">
+            <option value="">전체</option>
+            <option value="낮음" {% if risk_level == "낮음" %}selected{% endif %}>낮음</option>
+            <option value="주의" {% if risk_level == "주의" %}selected{% endif %}>주의</option>
+            <option value="위험" {% if risk_level == "위험" %}selected{% endif %}>위험</option>
+            <option value="긴급" {% if risk_level == "긴급" %}selected{% endif %}>긴급</option>
+          </select>
+        </div>
+
+        <div class="filter-actions">
+  <p><br></p>
+
+  <button type="submit" class="btn btn-primary">검색</button>
+
+  <!-- 🔥 최신순 버튼 -->
+  <a
+    href="{{ url_for('admin_report.report_list',
+      keyword=keyword,
+      status=status,
+      risk_level=risk_level,
+      sort='latest') }}"
+    class="btn-secondary"
+  >
+    최신순
+  </a>
+
+  <a href="{{ url_for('admin_report.report_list') }}" class="btn-secondary">초기화</a>
+
+  <p><br></p>
+</div>
+
+      </div>
+    </form>
+
+    <div class="table-wrap">
+      <table class="admin-table report-admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th class="text-left">제목</th>
+            <th>위험도</th>
+            <th>상태</th>
+            <th>등록일</th>
+            <th>상세</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% if reports %}
+            {% for report in reports %}
+              <tr>
+                <td>{{ report.id }}</td>
+
+                <td class="text-left report-title-cell">
+                  <a
+                    href="{{ url_for('admin_report.report_detail', report_id=report.id) }}"
+                    class="report-title-link"
+                  >
+                    {{ report.title }}
+                  </a>
+                </td>
+
+                <td>
+                  {% if report.risk_level == '긴급' %}
+                    <span class="badge badge-danger">{{ report.risk_level }}</span>
+                  {% elif report.risk_level == '위험' %}
+                    <span class="badge badge-risk">{{ report.risk_level }}</span>
+                  {% elif report.risk_level == '주의' %}
+                    <span class="badge badge-warning">{{ report.risk_level }}</span>
+                  {% else %}
+                    <span class="badge badge-success">{{ report.risk_level }}</span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if report.status == '처리완료' %}
+                    <span class="badge badge-success">{{ report.status }}</span>
+                  {% elif report.status == '오탐' %}
+                    <span class="badge badge-secondary">{{ report.status }}</span>
+                  {% elif report.status == '확인중' %}
+                    <span class="badge badge-warning">{{ report.status }}</span>
+                  {% else %}
+                    <span class="badge badge-status">{{ report.status }}</span>
+                  {% endif %}
+                </td>
+
+                <td class="report-date-cell">
+                  {{ report.created_at }}
+                </td>
+
+                <td>
+                  <a
+                    href="{{ url_for('admin_report.report_detail', report_id=report.id) }}"
+                    class="btn-secondary report-detail-btn"
+                  >
+                    상세보기
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="6" class="empty-message">
+                조건에 맞는 신고가 없습니다.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 페이지네이션 -->
+    {% if pagination.pages > 1 %}
+      <div class="pagination-wrap">
+        <div class="pagination">
+
+          {% if pagination.has_prev %}
+            <a
+              href="{{ url_for('admin_report.report_list', page=pagination.prev_num, keyword=keyword, status=status, risk_level=risk_level) }}"
+              class="page-btn"
+            >
+              이전
+            </a>
+          {% endif %}
+
+          {% for page_num in pagination.iter_pages() %}
+            {% if page_num %}
+              {% if page_num == pagination.page %}
+                <span class="page-btn active">{{ page_num }}</span>
+              {% else %}
+                <a
+                  href="{{ url_for('admin_report.report_list', page=page_num, keyword=keyword, status=status, risk_level=risk_level) }}"
+                  class="page-btn"
+                >
+                  {{ page_num }}
+                </a>
+              {% endif %}
+            {% else %}
+              <span class="page-ellipsis">...</span>
+            {% endif %}
+          {% endfor %}
+
+          {% if pagination.has_next %}
+            <a
+              href="{{ url_for('admin_report.report_list', page=pagination.next_num, keyword=keyword, status=status, risk_level=risk_level) }}"
+              class="page-btn"
+            >
+              다음
+            </a>
+          {% endif %}
+
+        </div>
+      </div>
+    {% endif %}
+
+  </div>
+
+</section>
+
+{% endblock %}

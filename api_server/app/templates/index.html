@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-9">
+            <div class="card bg-dark text-white">
+                <div class="card-header">실시간 도로 상황</div>
+                <div class="card-body p-0">
+                    <img src="{{ url_for('video.video_feed') }}" width="100%">
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">감지 로그</div>
+                <div class="card-body" id="log-container">
+                    <p>시스템 가동 중...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

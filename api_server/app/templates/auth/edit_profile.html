@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}내 정보 수정 | 404 R·N·F AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+  <div class="auth-container">
+
+    <aside class="auth-left">
+      <div class="auth-badge">회원 정보 관리</div>
+      <h1>내 정보 수정</h1>
+      <p class="auth-desc">
+        계정의 기본 정보를 수정할 수 있습니다.<br>
+        아이디는 변경할 수 없으며, 이름과 이메일만 수정 가능합니다.
+      </p>
+
+      <div class="auth-info-box">
+        <div class="auth-info-item">
+          <strong>수정 가능 항목</strong>
+          <p>이름, 이메일 정보를 변경할 수 있습니다.</p>
+        </div>
+        <div class="auth-info-item">
+          <strong>수정 불가 항목</strong>
+          <p>아이디와 권한 정보는 관리자 정책에 따라 고정됩니다.</p>
+        </div>
+        <div class="auth-info-item">
+          <strong>안내</strong>
+          <p>저장 후 마이페이지와 신고 페이지에 변경된 정보가 반영됩니다.</p>
+        </div>
+      </div>
+    </aside>
+
+    <section class="auth-card">
+      <h2>프로필 정보 수정</h2>
+      <p class="auth-subtext">현재 계정 정보를 확인하고 필요한 항목만 수정하세요.</p>
+
+      <div class="readonly-box">
+        <div class="readonly-item">
+          <span>아이디</span>
+          <strong>{{ user.username }}</strong>
+        </div>
+        <div class="readonly-item">
+          <span>권한</span>
+          <strong>{{ user.role }}</strong>
+        </div>
+        <div class="readonly-item">
+          <span>가입일</span>
+          <strong>{{ user.created_at.strftime('%Y.%m.%d') if user.created_at else '-' }}</strong>
+        </div>
+      </div>
+
+      <form id="updateProfileForm" class="auth-form">
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label>아이디</label>
+            <input type="text" value="{{ user.username }}" disabled>
+          </div>
+
+          <div class="form-group">
+            <label>이메일</label>
+            <input
+              type="email"
+              id="email"
+              value="{{ user.email or '' }}"
+              required
+            >
+          </div>
+
+          <div class="form-group full">
+            <label>이름</label>
+            <input
+              type="text"
+              id="name"
+              value="{{ user.name or '' }}"
+              placeholder="이름을 입력하세요"
+            >
+            <p class="form-help">실명 또는 표시 이름을 입력하세요.</p>
+          </div>
+
+        </div>
+
+        <p id="updateProfileMessage" class="form-message"></p>
+
+        <div class="form-actions">
+          <a href="{{ url_for('report_list.my_reports_page') }}" class="btn-line">마이페이지로</a>
+          <button type="submit" class="btn-primary auth-submit-btn">정보 저장</button>
+        </div>
+      </form>
+    </section>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("updateProfileForm");
+  if (!form) return;
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const email = document.getElementById("email").value.trim();
+    const name = document.getElementById("name").value.trim();
+    const messageBox = document.getElementById("updateProfileMessage");
+
+    try {
+      const response = await fetch("/auth/update-profile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: email,
+          name: name
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        messageBox.textContent = result.message;
+        messageBox.style.color = "#16a34a";
+      } else {
+        messageBox.textContent = result.message || "정보 수정에 실패했습니다.";
+        messageBox.style.color = "#f05a28";
+      }
+    } catch (error) {
+      messageBox.textContent = "서버 요청 중 오류가 발생했습니다.";
+      messageBox.style.color = "#f05a28";
+    }
+  });
+});
+</script>
+{% endblock %}

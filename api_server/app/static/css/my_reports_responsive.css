@@ -1,0 +1,105 @@
+/* ===================== 1280px 이하 ===================== */
+/* 요약 카드 3열 유지 */
+@media (max-width: 1280px) {
+  .summary-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ===================== 1080px 이하 ===================== */
+/* 전체 레이아웃 세로 정렬 + 필터 영역 반응형 */
+@media (max-width: 1080px) {
+  .page-grid {
+    grid-template-columns: 1fr; /* 1열 구조 */
+  }
+
+  .profile-card {
+    position: static; /* 고정 해제 */
+  }
+
+  .report-filter-wrap {
+    flex-direction: column; /* 필터 세로 정렬 */
+    align-items: stretch;
+  }
+
+  .filter-left,
+  .filter-right {
+    width: 100%; /* 전체 너비 사용 */
+  }
+
+  .filter-left {
+    flex-wrap: wrap; /* 줄바꿈 허용 */
+  }
+
+  /* 필터 2열 배치 */
+  .filter-item-keyword,
+  .filter-item-region,
+  .filter-item-status,
+  .filter-item-file-type,
+  .filter-item-sort {
+    flex: 1 1 calc(50% - 10px);
+  }
+}
+
+/* ===================== 860px 이하 ===================== */
+/* 요약 카드 2열 + 슬라이더 카드 크기 축소 */
+@media (max-width: 860px) {
+  .summary-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .detect-slide-card {
+    flex-basis: 240px; /* 카드 너비 줄이기 */
+  }
+}
+
+/* ===================== 640px 이하 (모바일) ===================== */
+/* 전체 모바일 대응 */
+@media (max-width: 640px) {
+  .page-grid {
+    padding: 20px 14px 30px; /* 여백 축소 */
+  }
+
+  /* 요약 카드 1열 */
+  .summary-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* 오늘 탐지 헤더 세로 정렬 */
+  .today-detect-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  /* 슬라이더 버튼 오른쪽 정렬 */
+  .today-detect-controls {
+    align-self: flex-end;
+  }
+
+  /* 슬라이더 카드 더 작게 */
+  .detect-slide-card {
+    flex-basis: 220px;
+    min-height: 146px;
+  }
+
+  /* 신고 카드 상단 / 메타 세로 정렬 */
+  .report-top,
+  .report-meta-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* 상세보기 버튼 전체 너비 */
+  .detail-btn {
+    width: 100%;
+  }
+
+  /* 필터 1열 (모바일) */
+  .filter-item-keyword,
+  .filter-item-region,
+  .filter-item-status,
+  .filter-item-file-type,
+  .filter-item-sort {
+    flex: 1 1 100%;
+  }
+}

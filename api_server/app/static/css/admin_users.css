@@ -1,0 +1,141 @@
+/* ========================================
+   관리자 회원 페이지 전용 스타일
+======================================== */
+
+.admin-action-cell {
+  min-width: 190px;
+}
+
+.role-form,
+.delete-form {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0;
+}
+
+.role-select {
+  min-width: 84px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f5f7fb;
+  font-size: 0.88rem;
+  font-weight: 600;
+  outline: none;
+}
+
+.role-select:focus {
+  border-color: rgba(255, 122, 31, 0.35);
+  box-shadow: 0 0 0 3px rgba(255, 122, 31, 0.12);
+}
+
+.btn-role-update {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 62px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(66, 211, 146, 0.22);
+  background: rgba(66, 211, 146, 0.14);
+  color: #62dba1;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btn-role-update:hover {
+  background: rgba(66, 211, 146, 0.2);
+  border-color: rgba(66, 211, 146, 0.35);
+}
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 62px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 99, 132, 0.22);
+  background: rgba(255, 99, 132, 0.14);
+  color: #ff8ba5;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btn-danger:hover {
+  background: rgba(255, 99, 132, 0.2);
+  border-color: rgba(255, 99, 132, 0.35);
+}
+
+/* 회원 검색 / 필터 */
+.user-filter-form {
+  margin-bottom: 20px;
+}
+
+.user-filter-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: end;
+}
+
+.user-filter-group {
+  min-width: 180px;
+  flex: 1;
+}
+
+.user-filter-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: #cfd7ea;
+  font-weight: 700;
+}
+
+/* 회원 상세 카드 */
+.user-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.user-history-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+}
+
+.user-history-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 992px) {
+  .user-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .user-filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .user-filter-group {
+    width: 100%;
+  }
+}

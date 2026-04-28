@@ -1,0 +1,683 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}AI 분석{% endblock %}
+
+{% block admin_extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_ai.css') }}">
+{% endblock %}
+
+{% block admin_content %}
+
+<section class="admin-panel">
+
+  <div class="admin-page-header">
+    <div>
+      <h1 class="admin-page-title">AI 분석</h1>
+      <p class="admin-page-desc">
+        AI 탐지 결과의 핵심 통계, 클래스별 현황, 월별 추이, 모델 성능 지표를 확인할 수 있습니다.
+      </p>
+    </div>
+
+    <form method="get" class="summary-filter-form">
+      <select name="period">
+        <option value="7d" {% if filters.period == '7d' %}selected{% endif %}>최근 7일</option>
+        <option value="30d" {% if filters.period == '30d' %}selected{% endif %}>최근 30일</option>
+        <option value="all" {% if filters.period == 'all' %}selected{% endif %}>전체</option>
+      </select>
+
+      <select name="file_type">
+        <option value="all" {% if filters.file_type == 'all' %}selected{% endif %}>전체 파일</option>
+        <option value="image" {% if filters.file_type == 'image' %}selected{% endif %}>이미지</option>
+        <option value="video" {% if filters.file_type == 'video' %}selected{% endif %}>영상</option>
+      </select>
+
+      <button type="submit" class="filter-btn">적용</button>
+    </form>
+  </div>
+
+  <!-- KPI 카드 -->
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="summary-label">총 탐지 수</div>
+      <div class="summary-value">{{ summary.total_detections }}</div>
+      <div class="summary-sub">선택 기간 기준 전체 탐지 건수</div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-label">평균 신뢰도</div>
+      <div class="summary-value">{{ summary.avg_confidence }}%</div>
+      <div class="summary-sub">선택 기간 기준 평균 confidence</div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-label">오탐 건수</div>
+      <div class="summary-value">{{ summary.false_positive_count }}</div>
+      <div class="summary-sub">관리자 최종 오탐 판정 기준</div>
+    </div>
+
+    <div class="summary-card danger">
+      <div class="summary-label">오탐률</div>
+      <div class="summary-value">{{ summary.false_positive_rate }}%</div>
+      <div class="summary-sub">최종 판단 완료 건 대비 비율</div>
+    </div>
+  </div>
+
+  <!-- 2행 -->
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <h3>이미지 기준 클래스별 탐지</h3>
+      </div>
+      <div class="chart-canvas-wrap">
+        <canvas id="imageLabelChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <h3>영상 기준 클래스별 탐지</h3>
+      </div>
+      <div class="chart-canvas-wrap">
+        <canvas id="videoLabelChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3행 -->
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <h3>월별 클래스 통계</h3>
+      </div>
+      <div class="chart-canvas-wrap">
+        <canvas id="monthlyLabelChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <h3>월별 처리완료 / 오탐 추이</h3>
+      </div>
+      <div class="chart-canvas-wrap">
+        <canvas id="monthlyResultChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4행 -->
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <h3>Confidence 구간별 분포</h3>
+      </div>
+      <div class="chart-canvas-wrap">
+        <canvas id="confidenceChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card metrics-card">
+      <div class="chart-card-header">
+        <h3>모델 성능 통계</h3>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <div class="metric-label">정확도</div>
+          <div class="metric-value">{{ (model_metrics.accuracy * 100) | round(2) }}%</div>
+        </div>
+
+        <div class="metric-box">
+          <div class="metric-label">정밀도</div>
+          <div class="metric-value">{{ (model_metrics.precision * 100) | round(2) }}%</div>
+        </div>
+
+        <div class="metric-box">
+          <div class="metric-label">재현율</div>
+          <div class="metric-value">{{ (model_metrics.recall * 100) | round(2) }}%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 이동 -->
+  <div class="table-card dashboard-link-card">
+    <div class="chart-card-header">
+      <h3>AI 로그 상세 확인</h3>
+    </div>
+    <p class="dashboard-link-desc">
+      개별 탐지 로그와 상세 분석 결과는 로그 목록 페이지에서 확인할 수 있습니다.
+    </p>
+    <a href="{{ url_for('admin_ai.list') }}" class="detail-btn">AI 탐지 로그 목록 보기</a>
+  </div>
+
+  <section class="retraining-section ai-card" id="falsePositiveRetrainingSection">
+    <div class="retraining-section-header">
+      <div>
+        <div class="retraining-title-row">
+          <h2 class="retraining-section-title">오탐 데이터 재학습</h2>
+          <span class="retraining-dev-badge">개발 예정</span>
+        </div>
+        <p class="retraining-section-desc">
+          관리자가 판정한 오탐 데이터를 기반으로 재학습 파이프라인을 구성할 수 있도록 설계된 기능입니다.
+          현재는 운영 흐름 시연용 UI이며, 실제 학습 서버 연동은 추후 개발 예정입니다.
+        </p>
+      </div>
+
+      <div class="retraining-status-pill" id="retrainingStatusPill">
+        재학습 요청 가능
+      </div>
+    </div>
+
+    <div class="retraining-summary-grid">
+      <div class="retraining-mini-card">
+        <div class="retraining-mini-label">누적 오탐 데이터</div>
+        <div class="retraining-mini-value">128건</div>
+        <div class="retraining-mini-sub">최근 90일 관리자 최종 판정 기준</div>
+      </div>
+      <div class="retraining-mini-card">
+        <div class="retraining-mini-label">재학습 후보 데이터</div>
+        <div class="retraining-mini-value">42건</div>
+        <div class="retraining-mini-sub">학습셋 편입 기준 충족 데이터</div>
+      </div>
+      <div class="retraining-mini-card">
+        <div class="retraining-mini-label">최근 재학습 버전</div>
+        <div class="retraining-mini-value">v2.3.1</div>
+        <div class="retraining-mini-sub">2026-03-18 배포 모델 기준</div>
+      </div>
+      <div class="retraining-mini-card highlight">
+        <div class="retraining-mini-label">예상 성능 개선폭</div>
+        <div class="retraining-mini-value">+2.8%p</div>
+        <div class="retraining-mini-sub">오탐 감소 기준 내부 시뮬레이션 추정</div>
+      </div>
+    </div>
+
+    <div class="retraining-flow-card">
+      <div class="chart-card-header">
+        <h3>재학습 운영 흐름</h3>
+        <span class="retraining-flow-caption" id="retrainingFlowCaption">현재 상태: 재학습 요청 가능</span>
+      </div>
+
+      <div class="retraining-steps">
+        <div class="retraining-step completed" data-step="0">
+          <div class="retraining-step-index">1</div>
+          <div class="retraining-step-body">
+            <strong>오탐 데이터 수집</strong>
+            <span>관리자 판정 완료 데이터 누적</span>
+          </div>
+        </div>
+        <div class="retraining-step active" data-step="1">
+          <div class="retraining-step-index">2</div>
+          <div class="retraining-step-body">
+            <strong>재학습 요청</strong>
+            <span>학습 파이프라인 시작 요청 가능</span>
+          </div>
+        </div>
+        <div class="retraining-step" data-step="2">
+          <div class="retraining-step-index">3</div>
+          <div class="retraining-step-body">
+            <strong>학습 진행중</strong>
+            <span>오탐 데이터 반영 모델 학습</span>
+          </div>
+        </div>
+        <div class="retraining-step" data-step="3">
+          <div class="retraining-step-index">4</div>
+          <div class="retraining-step-body">
+            <strong>성능 평가</strong>
+            <span>Precision, Recall, mAP 기반 검증</span>
+          </div>
+        </div>
+        <div class="retraining-step" data-step="4">
+          <div class="retraining-step-index">5</div>
+          <div class="retraining-step-body">
+            <strong>운영 반영</strong>
+            <span>검토 완료 후 운영 배포 가능</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="retraining-notice-banner">
+        <strong>시연 안내</strong>
+        <span>현재 화면은 오탐 데이터 누적부터 재학습 요청, 모델 비교, 운영 반영 판단까지의 흐름을 보여주기 위한 프론트 UI입니다.</span>
+      </div>
+    </div>
+
+    <div class="retraining-action-row">
+      <button type="button" class="filter-btn secondary" id="toggleCandidateBtn">재학습 후보 보기</button>
+      <button type="button" class="filter-btn primary" id="requestRetrainingBtn">재학습 요청</button>
+      <button type="button" class="detail-btn retraining-compare-btn" id="toggleCompareBtn">모델 비교 보기</button>
+    </div>
+
+    <div class="retraining-feedback" id="retrainingFeedback">
+      현재 42건의 후보 데이터가 재학습 요청 대기 상태입니다.
+    </div>
+
+    <div class="retraining-panel" id="candidatePanel" hidden>
+      <div class="chart-card-header">
+        <h3>재학습 후보 데이터 목록</h3>
+        <span class="retraining-panel-caption">Mock 데이터 기준 6건</span>
+      </div>
+      <div class="table-wrapper">
+        <table class="admin-table retraining-table">
+          <thead>
+            <tr>
+              <th>파일명</th>
+              <th>탐지 라벨</th>
+              <th>confidence</th>
+              <th>관리자 판정</th>
+              <th>등록일</th>
+            </tr>
+          </thead>
+          <tbody id="candidateTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="retraining-panel" id="comparePanel" hidden>
+      <div class="chart-card-header">
+        <h3>기존 모델 vs 재학습 예정 모델</h3>
+        <span class="retraining-panel-caption">성능 평가는 시연용 mock 수치입니다</span>
+      </div>
+      <div class="table-wrapper">
+        <table class="admin-table retraining-table">
+          <thead>
+            <tr>
+              <th>모델 버전</th>
+              <th>Precision</th>
+              <th>Recall</th>
+              <th>mAP50</th>
+              <th>mAP50-95</th>
+            </tr>
+          </thead>
+          <tbody id="compareTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</section>
+
+<script id="ai-summary-image-labels" type="application/json">{{ image_label_stats.labels | tojson }}</script>
+<script id="ai-summary-image-counts" type="application/json">{{ image_label_stats.counts | tojson }}</script>
+<script id="ai-summary-video-labels" type="application/json">{{ video_label_stats.labels | tojson }}</script>
+<script id="ai-summary-video-counts" type="application/json">{{ video_label_stats.counts | tojson }}</script>
+<script id="ai-summary-monthly-label-stats" type="application/json">{{ monthly_label_stats | tojson }}</script>
+<script id="ai-summary-monthly-result-stats" type="application/json">{{ monthly_result_stats | tojson }}</script>
+<script id="ai-summary-confidence-ranges" type="application/json">{{ confidence_distribution.ranges | tojson }}</script>
+<script id="ai-summary-confidence-counts" type="application/json">{{ confidence_distribution.counts | tojson }}</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  function parseJsonScript(id) {
+    const el = document.getElementById(id);
+    if (!el) return [];
+
+    try {
+      return JSON.parse(el.textContent || "[]");
+    } catch (error) {
+      console.warn("[AdminAI] JSON parse error:", id, error);
+      return [];
+    }
+  }
+
+  const commonLegendStyle = {
+    labels: {
+      color: "#dbe4f3",
+      font: { size: 12 }
+    }
+  };
+
+  const commonScaleStyle = {
+    ticks: { color: "#c7d0e2" },
+    grid: { color: "rgba(255,255,255,0.08)" }
+  };
+
+  const commonBarOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: commonLegendStyle },
+    scales: {
+      x: commonScaleStyle,
+      y: { ...commonScaleStyle, beginAtZero: true }
+    }
+  };
+
+  // 이미지 클래스별 탐지
+  const imageLabels = parseJsonScript("ai-summary-image-labels");
+  const imageCounts = parseJsonScript("ai-summary-image-counts");
+
+  new Chart(document.getElementById("imageLabelChart"), {
+    type: "bar",
+    data: {
+      labels: imageLabels,
+      datasets: [{
+        label: "탐지 건수",
+        data: imageCounts,
+        borderWidth: 1,
+        borderRadius: 8,
+        backgroundColor: [
+          "rgba(245, 158, 11, 0.75)",
+          "rgba(249, 115, 22, 0.75)",
+          "rgba(107, 114, 128, 0.75)",
+          "rgba(239, 68, 68, 0.75)"
+        ],
+        borderColor: [
+          "rgba(245, 158, 11, 1)",
+          "rgba(249, 115, 22, 1)",
+          "rgba(107, 114, 128, 1)",
+          "rgba(239, 68, 68, 1)"
+        ]
+      }]
+    },
+    options: commonBarOptions
+  });
+
+  // 영상 클래스별 탐지
+  const videoLabels = parseJsonScript("ai-summary-video-labels");
+  const videoCounts = parseJsonScript("ai-summary-video-counts");
+
+  new Chart(document.getElementById("videoLabelChart"), {
+    type: "bar",
+    data: {
+      labels: videoLabels,
+      datasets: [{
+        label: "탐지 건수",
+        data: videoCounts,
+        borderWidth: 1,
+        borderRadius: 8,
+        backgroundColor: [
+          "rgba(59, 130, 246, 0.75)",
+          "rgba(16, 185, 129, 0.75)",
+          "rgba(168, 85, 247, 0.75)",
+          "rgba(244, 63, 94, 0.75)"
+        ],
+        borderColor: [
+          "rgba(59, 130, 246, 1)",
+          "rgba(16, 185, 129, 1)",
+          "rgba(168, 85, 247, 1)",
+          "rgba(244, 63, 94, 1)"
+        ]
+      }]
+    },
+    options: commonBarOptions
+  });
+
+  // 월별 클래스 통계
+  const monthlyLabelStats = parseJsonScript("ai-summary-monthly-label-stats");
+  const monthlyLabels = monthlyLabelStats.map(item => item.month);
+
+  const monthlyBagCounts = monthlyLabelStats.map(item => item.bag);
+  const monthlyBoxCounts = monthlyLabelStats.map(item => item.box);
+  const monthlyRockCounts = monthlyLabelStats.map(item => item.rock);
+  const monthlyTireCounts = monthlyLabelStats.map(item => item.tire);
+
+  new Chart(document.getElementById("monthlyLabelChart"), {
+    type: "bar",
+    data: {
+      labels: monthlyLabels,
+      datasets: [
+        {
+          label: "봉투류",
+          data: monthlyBagCounts,
+          backgroundColor: "rgba(245, 158, 11, 0.75)",
+          borderColor: "rgba(245, 158, 11, 1)",
+          borderWidth: 1,
+          borderRadius: 6
+        },
+        {
+          label: "박스형",
+          data: monthlyBoxCounts,
+          backgroundColor: "rgba(249, 115, 22, 0.75)",
+          borderColor: "rgba(249, 115, 22, 1)",
+          borderWidth: 1,
+          borderRadius: 6
+        },
+        {
+          label: "낙석",
+          data: monthlyRockCounts,
+          backgroundColor: "rgba(107, 114, 128, 0.75)",
+          borderColor: "rgba(107, 114, 128, 1)",
+          borderWidth: 1,
+          borderRadius: 6
+        },
+        {
+          label: "타이어",
+          data: monthlyTireCounts,
+          backgroundColor: "rgba(239, 68, 68, 0.75)",
+          borderColor: "rgba(239, 68, 68, 1)",
+          borderWidth: 1,
+          borderRadius: 6
+        }
+      ]
+    },
+    options: commonBarOptions
+  });
+
+  // 월별 처리 결과
+  const monthlyResultStats = parseJsonScript("ai-summary-monthly-result-stats");
+  const monthlyResultLabels = monthlyResultStats.map(item => item.month);
+  const doneCounts = monthlyResultStats.map(item => item.done);
+  const falsePositiveCounts = monthlyResultStats.map(item => item.false_positive);
+
+  new Chart(document.getElementById("monthlyResultChart"), {
+    type: "line",
+    data: {
+      labels: monthlyResultLabels,
+      datasets: [
+        {
+          label: "처리완료",
+          data: doneCounts,
+          fill: false,
+          tension: 0.28,
+          borderWidth: 2,
+          borderColor: "rgba(34, 197, 94, 1)",
+          backgroundColor: "rgba(34, 197, 94, 0.15)",
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: "rgba(34, 197, 94, 1)"
+        },
+        {
+          label: "오탐",
+          data: falsePositiveCounts,
+          fill: false,
+          tension: 0.28,
+          borderWidth: 2,
+          borderColor: "rgba(239, 68, 68, 1)",
+          backgroundColor: "rgba(239, 68, 68, 0.15)",
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: "rgba(239, 68, 68, 1)"
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: commonLegendStyle },
+      scales: {
+        x: commonScaleStyle,
+        y: { ...commonScaleStyle, beginAtZero: true }
+      }
+    }
+  });
+
+  // confidence 분포
+  const confidenceLabels = parseJsonScript("ai-summary-confidence-ranges");
+  const confidenceCounts = parseJsonScript("ai-summary-confidence-counts");
+
+  new Chart(document.getElementById("confidenceChart"), {
+    type: "bar",
+    data: {
+      labels: confidenceLabels,
+      datasets: [{
+        label: "탐지 건수",
+        data: confidenceCounts,
+        borderWidth: 1,
+        borderRadius: 8,
+        backgroundColor: [
+          "rgba(239, 68, 68, 0.75)",
+          "rgba(245, 158, 11, 0.75)",
+          "rgba(59, 130, 246, 0.75)",
+          "rgba(34, 197, 94, 0.75)"
+        ],
+        borderColor: [
+          "rgba(239, 68, 68, 1)",
+          "rgba(245, 158, 11, 1)",
+          "rgba(59, 130, 246, 1)",
+          "rgba(34, 197, 94, 1)"
+        ]
+      }]
+    },
+    options: commonBarOptions
+  });
+
+  const retrainingCandidateData = [
+    { file_name: "fp_camera_0214.jpg", label: "box", confidence: "0.91", verdict: "오탐", created_at: "2026-04-01" },
+    { file_name: "night_road_118.png", label: "rock", confidence: "0.87", verdict: "오탐", created_at: "2026-03-31" },
+    { file_name: "crosswalk_clip_07.mp4", label: "tire", confidence: "0.83", verdict: "오탐", created_at: "2026-03-30" },
+    { file_name: "underpass_frame_55.jpg", label: "bag", confidence: "0.78", verdict: "오탐", created_at: "2026-03-29" },
+    { file_name: "routeA_alert_009.jpg", label: "box", confidence: "0.74", verdict: "오탐", created_at: "2026-03-28" },
+    { file_name: "rain_lane_441.png", label: "rock", confidence: "0.69", verdict: "오탐", created_at: "2026-03-26" }
+  ];
+
+  const retrainingCompareData = [
+    { version: "운영 모델 v2.3.1", precision: "91.2%", recall: "88.4%", map50: "90.1%", map5095: "71.8%" },
+    { version: "재학습 예정 v2.4.0", precision: "93.6%", recall: "90.1%", map50: "92.4%", map5095: "74.6%" }
+  ];
+
+  const retrainingStates = {
+    ready: {
+      pill: "재학습 요청 가능",
+      caption: "현재 상태: 재학습 요청 가능",
+      feedback: "현재 42건의 후보 데이터가 재학습 요청 대기 상태입니다.",
+      activeStep: 1
+    },
+    queued: {
+      pill: "학습 대기중",
+      caption: "현재 상태: 재학습 요청 접수, 학습 대기중",
+      feedback: "재학습 요청이 접수되었습니다. 오탐 데이터 검증 후 학습 큐에 등록됩니다.",
+      activeStep: 2
+    },
+    training: {
+      pill: "학습 진행중",
+      caption: "현재 상태: 재학습 파이프라인 실행중",
+      feedback: "재학습 파이프라인이 실행 중입니다. 학습 완료 후 성능 평가 결과를 비교할 수 있습니다.",
+      activeStep: 3
+    }
+  };
+
+  const candidateTableBody = document.getElementById("candidateTableBody");
+  const compareTableBody = document.getElementById("compareTableBody");
+  const candidatePanel = document.getElementById("candidatePanel");
+  const comparePanel = document.getElementById("comparePanel");
+  const toggleCandidateBtn = document.getElementById("toggleCandidateBtn");
+  const toggleCompareBtn = document.getElementById("toggleCompareBtn");
+  const requestRetrainingBtn = document.getElementById("requestRetrainingBtn");
+  const retrainingFeedback = document.getElementById("retrainingFeedback");
+  const retrainingStatusPill = document.getElementById("retrainingStatusPill");
+  const retrainingFlowCaption = document.getElementById("retrainingFlowCaption");
+  const retrainingSteps = Array.from(document.querySelectorAll(".retraining-step"));
+
+  function renderCandidateRows() {
+    if (!candidateTableBody) return;
+
+    candidateTableBody.innerHTML = retrainingCandidateData.map((item) => `
+      <tr>
+        <td>${item.file_name}</td>
+        <td>${item.label}</td>
+        <td><span class="badge badge-mid">${item.confidence}</span></td>
+        <td><span class="flag danger">${item.verdict}</span></td>
+        <td>${item.created_at}</td>
+      </tr>
+    `).join("");
+  }
+
+  function renderCompareRows() {
+    if (!compareTableBody) return;
+
+    compareTableBody.innerHTML = retrainingCompareData.map((item, index) => `
+      <tr>
+        <td>
+          <div class="retraining-model-cell">
+            <strong>${item.version}</strong>
+            ${index === 1 ? '<span class="retraining-inline-chip">예상 개선</span>' : '<span class="retraining-inline-chip muted">기준 모델</span>'}
+          </div>
+        </td>
+        <td>${item.precision}</td>
+        <td>${item.recall}</td>
+        <td>${item.map50}</td>
+        <td>${item.map5095}</td>
+      </tr>
+    `).join("");
+  }
+
+  function setRetrainingState(stateKey) {
+    const state = retrainingStates[stateKey];
+    if (!state) return;
+
+    retrainingStatusPill.textContent = state.pill;
+    retrainingStatusPill.dataset.state = stateKey;
+    retrainingFlowCaption.textContent = state.caption;
+    retrainingFeedback.textContent = state.feedback;
+
+    retrainingSteps.forEach((stepEl, index) => {
+      stepEl.classList.remove("completed", "active");
+
+      if (index < state.activeStep) {
+        stepEl.classList.add("completed");
+      } else if (index === state.activeStep) {
+        stepEl.classList.add("active");
+      }
+    });
+  }
+
+  function togglePanel(panelEl, buttonEl, activeText, inactiveText) {
+    if (!panelEl || !buttonEl) return;
+
+    const shouldOpen = panelEl.hasAttribute("hidden");
+    if (shouldOpen) {
+      panelEl.removeAttribute("hidden");
+      buttonEl.textContent = activeText;
+    } else {
+      panelEl.setAttribute("hidden", "");
+      buttonEl.textContent = inactiveText;
+    }
+  }
+
+  renderCandidateRows();
+  renderCompareRows();
+  setRetrainingState("ready");
+
+  if (toggleCandidateBtn) {
+    toggleCandidateBtn.addEventListener("click", () => {
+      togglePanel(candidatePanel, toggleCandidateBtn, "후보 데이터 닫기", "재학습 후보 보기");
+    });
+  }
+
+  if (toggleCompareBtn) {
+    toggleCompareBtn.addEventListener("click", () => {
+      togglePanel(comparePanel, toggleCompareBtn, "모델 비교 닫기", "모델 비교 보기");
+    });
+  }
+
+  if (requestRetrainingBtn) {
+    requestRetrainingBtn.addEventListener("click", () => {
+      if (requestRetrainingBtn.dataset.progress === "queued") {
+        requestRetrainingBtn.dataset.progress = "training";
+        requestRetrainingBtn.textContent = "학습 진행 상태 확인";
+        setRetrainingState("training");
+        comparePanel.removeAttribute("hidden");
+        toggleCompareBtn.textContent = "모델 비교 닫기";
+        return;
+      }
+
+      requestRetrainingBtn.dataset.progress = "queued";
+      requestRetrainingBtn.textContent = "학습 시작 시뮬레이션";
+      setRetrainingState("queued");
+      candidatePanel.removeAttribute("hidden");
+      toggleCandidateBtn.textContent = "후보 데이터 닫기";
+    });
+  }
+</script>
+
+{% endblock %}

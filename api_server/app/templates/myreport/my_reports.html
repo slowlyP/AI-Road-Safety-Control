@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+
+{% block title %}내 신고 목록 | 404 R·N·F AI{% endblock %}
+
+{% block extra_css %}
+<!-- 내 신고 목록 전용 CSS -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/my_reports.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/my_reports_layout.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/my_reports_profile_summary.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/my_reports_detect.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/my_reports_list.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/my_reports_responsive.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-grid">
+
+    <!-- 왼쪽 프로필 영역 -->
+    <aside class="left-panel">
+        <section class="profile-card card-box">
+            <div class="profile-icon">👤</div>
+
+            <!-- 사용자 이름 / 권한 표시 -->
+            <h3 class="profile-name">{{ user.name or user.username }}</h3>
+            <p class="profile-region">{{ user.role }}</p>
+            <div class="profile-status">● 시스템 정상</div>
+
+            <!-- 사용자 기본 정보 -->
+            <div class="profile-info-item">
+                <span class="info-label">아이디</span>
+                <strong class="info-value">{{ user.username }}</strong>
+            </div>
+
+            <div class="profile-info-item">
+                <span class="info-label">이메일</span>
+                <strong class="info-value">{{ user.email or '-' }}</strong>
+            </div>
+
+            <div class="profile-info-item">
+                <span class="info-label">권한</span>
+                <strong class="info-value">{{ user.role }}</strong>
+            </div>
+
+            <div class="profile-info-item">
+                <span class="info-label">가입일</span>
+                <strong class="info-value">
+                    {{ user.created_at.strftime('%Y.%m.%d') if user.created_at else '-' }}
+                </strong>
+            </div>
+
+            <!-- 프로필 관련 버튼 -->
+            <div class="profile-action-group">
+                <a href="{{ url_for('auth.update_profile') }}" class="dark-btn action-btn">
+                    프로필 수정
+                </a>
+
+                <a href="{{ url_for('auth.role_request') }}" class="outline-btn action-btn">
+                    관리자 권한 신청
+                </a>
+
+                <a href="{{ url_for('auth.delete_account') }}" class="danger-btn action-btn">
+                    회원탈퇴
+                </a>
+            </div>
+        </section>
+    </aside>
+
+    <!-- 오른쪽 메인 콘텐츠 영역 -->
+    <section class="right-panel">
+
+        <!-- flash 메시지 출력 -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-message-wrap">
+            {% for category, message in messages %}
+            <div class="toast-message toast-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- 상단 요약 카드 -->
+        <section class="summary-row">
+
+            <!-- 전체 신고 카드 -->
+            <!-- data-status="" : 전체 보기 -->
+            <div class="summary-card summary-filter-card summary-card-red" data-status="">
+                <div class="summary-header">
+                    <div class="summary-icon red">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path
+                                d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9l-6-6z"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            />
+                        </svg>
+                    </div>
+                    <span class="summary-top-label">전체 신고</span>
+                </div>
+                <div class="summary-value" id="total-count">0</div>
+                <div class="summary-subtext">등록된 전체 신고 수</div>
+            </div>
+
+            <!-- 접수 카드 -->
+            <!-- data-status="접수" : 접수 상태만 필터 -->
+            <div class="summary-card summary-filter-card summary-card-yellow" data-status="접수">
+                <div class="summary-header">
+                    <div class="summary-icon yellow">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path
+                                d="M3 10h18M7 15h1m4 0h5"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            />
+                        </svg>
+                    </div>
+                    <span class="summary-top-label">접수</span>
+                </div>
+                <div class="summary-value" id="count-received">0</div>
+                <div class="summary-subtext">현재 접수 상태</div>
+            </div>
+
+            <!-- 처리완료 카드 -->
+            <!-- data-status="처리완료" : 처리완료 상태만 필터 -->
+            <div class="summary-card summary-filter-card summary-card-green" data-status="처리완료">
+                <div class="summary-header">
+                    <div class="summary-icon green">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path
+                                d="M5 13l4 4L19 7"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            />
+                        </svg>
+                    </div>
+                    <span class="summary-top-label">처리완료</span>
+                </div>
+                <div class="summary-value" id="count-done">0</div>
+                <div class="summary-subtext">완료된 신고 건수</div>
+            </div>
+
+            <!-- 오탐 카드 -->
+            <!-- data-status="오탐" : 오탐 상태만 필터 -->
+            <div class="summary-card summary-filter-card summary-card-gray" data-status="오탐">
+                <div class="summary-header">
+                    <div class="summary-icon gray">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path
+                                d="M6 6l12 12M18 6L6 18"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                    </div>
+                    <span class="summary-top-label">오탐</span>
+                </div>
+                <div class="summary-value" id="count-false">0</div>
+                <div class="summary-subtext">오탐으로 분류된 신고</div>
+            </div>
+
+            <!-- 확인중 카드 -->
+            <!-- data-status="확인중" : 확인중 상태만 필터 -->
+            <div class="summary-card summary-filter-card summary-card-orange" data-status="확인중">
+                <div class="summary-header">
+                    <div class="summary-icon orange">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path
+                                d="M12 9v4m0 4h.01M10 2h4l8 20H2L10 2z"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            />
+                        </svg>
+                    </div>
+                    <span class="summary-top-label">확인중</span>
+                </div>
+                <div class="summary-value" id="count-checking">0</div>
+                <div class="summary-subtext">검토 진행중</div>
+            </div>
+        </section>
+
+        <!-- 오늘 탐지 기록 가로 슬라이드 영역 -->
+        <section class="card-box detect-card compact-detect-card today-detect-section">
+
+            <!-- 제목 + 좌우 이동 버튼 -->
+            <div class="today-detect-header">
+                <div class="today-detect-title-wrap">
+                    <span class="today-live-dot"></span>
+                    <h3 class="today-detect-title">오늘 탐지기록</h3>
+                </div>
+
+                <div class="today-detect-controls">
+                    <!-- 이전 버튼 -->
+                    <button
+                        type="button"
+                        class="detect-arrow prev"
+                        id="detectPrevBtn"
+                        aria-label="이전"
+                    >
+                        &#10094;
+                    </button>
+
+                    <!-- 다음 버튼 -->
+                    <button
+                        type="button"
+                        class="detect-arrow next"
+                        id="detectNextBtn"
+                        aria-label="다음"
+                    >
+                        &#10095;
+                    </button>
+                </div>
+            </div>
+
+            <!-- 가로 슬라이드가 보이는 영역 -->
+            <div class="today-detect-slider" id="todayDetectSlider">
+                <!-- JS에서 오늘 탐지 카드들을 가로로 넣는 영역 -->
+                <div class="today-detect-track" id="todayDetectTrack"></div>
+            </div>
+
+            <!-- 오늘 탐지 기록이 없을 때 표시 -->
+            <div
+                id="today-detect-empty"
+                class="empty-box detect-empty-box"
+                style="display: none;"
+            >
+                오늘 등록된 신고가 없습니다.
+            </div>
+        </section>
+
+        <!-- 내 신고 리스트 영역 -->
+        <section class="card-box report-list-section large-report-section">
+            <div class="section-title-row">
+                <h3>내 신고 리스트</h3>
+            </div>
+
+            <!-- 필터 바 -->
+            <form id="report-filter-form" class="report-filter-wrap" autocomplete="off">
+
+                <!-- 왼쪽 필터 그룹 -->
+                <div class="filter-left">
+                    <!-- 검색어 입력 -->
+                    <div class="filter-item filter-item-keyword">
+                        <input
+                            type="text"
+                            id="filter-keyword"
+                            name="keyword"
+                            class="filter-input filter-keyword"
+                            placeholder="검색어"
+                        >
+                    </div>
+
+                    <!-- 지역 선택 필터 -->
+                    <div class="filter-item filter-item-region">
+                        <select
+                            id="filter-region"
+                            name="region"
+                            class="filter-select filter-region"
+                        >
+                            <option value="">지역 전체</option>
+                        </select>
+                    </div>
+
+                    <!-- 상태 선택 -->
+                    <div class="filter-item filter-item-status">
+                        <select id="filter-status" name="status" class="filter-select filter-status">
+                            <option value="">상태 전체</option>
+                            <option value="접수">접수</option>
+                            <option value="확인중">확인중</option>
+                            <option value="처리완료">처리완료</option>
+                            <option value="오탐">오탐</option>
+                        </select>
+                    </div>
+
+                    <!-- 파일 유형 선택 -->
+                    <div class="filter-item filter-item-file-type">
+                        <select id="filter-file-type" name="file_type" class="filter-select filter-file">
+                            <option value="">파일 전체</option>
+                            <option value="이미지">이미지</option>
+                            <option value="영상">영상</option>
+                            <option value="일반">일반</option>
+                        </select>
+                    </div>
+
+                    <!-- 정렬 선택 -->
+                    <div class="filter-item filter-item-sort">
+                        <select id="filter-sort" name="sort" class="filter-select filter-sort">
+                            <option value="latest">최신순</option>
+                            <option value="oldest">오래된순</option>
+                            <option value="risk">위험도순</option>
+                            <option value="status">상태순</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 오른쪽 버튼 그룹 -->
+                <div class="filter-right">
+                    <button type="submit" id="filter-search-btn" class="filter-btn filter-search-btn">
+                        검색
+                    </button>
+
+                    <button type="button" id="filter-reset-btn" class="filter-btn filter-reset-btn">
+                        초기화
+                    </button>
+                </div>
+            </form>
+
+            <!-- 신고 카드 목록 -->
+            <div id="report-list" class="report-list"></div>
+
+            <!-- 신고 목록 비어있을 때 표시 -->
+            <div id="empty-box" class="empty-box" style="display: none;">
+                등록한 신고가 없습니다.
+            </div>
+
+            <!-- 신고 목록 페이지네이션 -->
+            <div id="pagination" class="pagination"></div>
+        </section>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- 내 신고 목록 전용 JS -->
+<script src="{{ url_for('static', filename='js/my_reports_state.js') }}"></script>
+<script src="{{ url_for('static', filename='js/my_reports_utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/my_reports_filters.js') }}"></script>
+<script src="{{ url_for('static', filename='js/my_reports_slider.js') }}"></script>
+<script src="{{ url_for('static', filename='js/my_reports_render.js') }}"></script>
+<script src="{{ url_for('static', filename='js/my_reports_api.js') }}"></script>
+<script src="{{ url_for('static', filename='js/my_reports.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,214 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}권한 신청 상세{% endblock %}
+
+{% block admin_content %}
+
+<section class="admin-panel">
+  <h1 class="admin-page-title">권한 신청 상세</h1>
+  <p class="admin-page-desc">
+    신청자 정보와 신청 사유를 확인하고 승인 또는 거절 처리할 수 있습니다.
+  </p>
+</section>
+
+<section class="detail-grid detail-card-spacing">
+
+  <!-- 신청자 정보 -->
+  <section class="detail-card">
+    <h2 class="detail-card-title">신청자 정보</h2>
+
+    <div class="detail-list">
+      <div class="detail-item">
+        <span class="detail-label">신청번호</span>
+        <div class="detail-value">#{{ role_request.id }}</div>
+      </div>
+
+      <div class="detail-item">
+        <span class="detail-label">신청자</span>
+        <div class="detail-value">{{ role_request.user.name or role_request.user.username }}</div>
+      </div>
+
+      <div class="detail-item">
+        <span class="detail-label">아이디</span>
+        <div class="detail-value">{{ role_request.user.username }}</div>
+      </div>
+
+      <div class="detail-item">
+        <span class="detail-label">이메일</span>
+        <div class="detail-value">{{ role_request.user.email }}</div>
+      </div>
+
+      <div class="detail-item">
+        <span class="detail-label">현재 사용자 권한</span>
+        <div class="detail-value">{{ role_request.user.role }}</div>
+      </div>
+
+      <div class="detail-item">
+        <span class="detail-label">신청일</span>
+        <div class="detail-value">
+          {{ role_request.created_at.strftime('%Y-%m-%d %H:%M') if role_request.created_at else '-' }}
+        </div>
+      </div>
+
+      <div class="detail-item">
+        <span class="detail-label">현재 상태</span>
+        <div class="detail-value">
+          {% if role_request.status == '대기' %}
+            <span class="badge badge-pending">대기</span>
+          {% elif role_request.status == '승인' %}
+            <span class="badge badge-success">승인</span>
+          {% elif role_request.status == '거절' %}
+            <span class="badge badge-danger">거절</span>
+          {% else %}
+            <span class="badge badge-status">{{ role_request.status }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 신청 사유 -->
+  <section class="detail-card">
+    <h2 class="detail-card-title">신청 사유</h2>
+
+    <div class="report-content-box">
+      {{ role_request.request_reason or '신청 사유가 없습니다.' }}
+    </div>
+  </section>
+
+</section>
+
+<section class="detail-card detail-card-spacing">
+  <h2 class="detail-card-title">처리</h2>
+
+  {% if role_request.status == '대기' %}
+  <form id="reviewForm" class="status-form">
+    <div class="status-current-box">
+      <span class="status-current-label">현재 상태</span>
+      <span class="badge badge-pending">대기</span>
+    </div>
+
+    <div class="form-group">
+      <label for="review_comment" class="form-label">검토 메모</label>
+      <textarea
+        id="review_comment"
+        name="review_comment"
+        class="form-textarea"
+        placeholder="승인 또는 거절 사유를 입력하세요."
+      ></textarea>
+    </div>
+
+    <p id="reviewMessage" class="form-message"></p>
+
+    <div class="form-actions">
+      <a
+        href="{{ url_for('admin_role_request.role_request_list') }}"
+        class="btn-secondary"
+      >
+        목록으로
+      </a>
+
+      <button
+        type="button"
+        class="btn-danger"
+        onclick="submitReview('거절')"
+      >
+        거절
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        onclick="submitReview('승인')"
+      >
+        승인
+      </button>
+    </div>
+  </form>
+  {% else %}
+  <div class="status-placeholder">
+    이미 처리된 신청입니다.
+  </div>
+
+  <div class="detail-list detail-card-spacing">
+    <div class="detail-item">
+      <span class="detail-label">처리 상태</span>
+      <div class="detail-value">
+        {% if role_request.status == '승인' %}
+          <span class="badge badge-success">승인</span>
+        {% elif role_request.status == '거절' %}
+          <span class="badge badge-danger">거절</span>
+        {% else %}
+          <span class="badge badge-status">{{ role_request.status }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="detail-item">
+      <span class="detail-label">처리 일시</span>
+      <div class="detail-value">
+        {{ role_request.reviewed_at.strftime('%Y-%m-%d %H:%M') if role_request.reviewed_at else '-' }}
+      </div>
+    </div>
+
+    {% if role_request.reviewer %}
+    <div class="detail-item">
+      <span class="detail-label">처리 관리자</span>
+      <div class="detail-value">
+        {{ role_request.reviewer.name or role_request.reviewer.username }}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="form-actions detail-card-spacing">
+    <a
+      href="{{ url_for('admin_role_request.role_request_list') }}"
+      class="btn-secondary"
+    >
+      목록으로
+    </a>
+  </div>
+  {% endif %}
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function submitReview(status) {
+  const messageBox = document.getElementById("reviewMessage");
+  const reviewComment = document.getElementById("review_comment").value.trim();
+
+  try {
+    const response = await fetch("{{ url_for('admin_role_request.review_role_request', request_id=role_request.id) }}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        status: status,
+        review_comment: reviewComment
+      })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      messageBox.textContent = result.message;
+      messageBox.style.color = "#62dba1";
+
+      setTimeout(() => {
+        window.location.href = "{{ url_for('admin_role_request.role_request_list') }}";
+      }, 800);
+    } else {
+      messageBox.textContent = result.message || "처리에 실패했습니다.";
+      messageBox.style.color = "#ff8ba5";
+    }
+  } catch (error) {
+    messageBox.textContent = "서버 요청 중 오류가 발생했습니다.";
+    messageBox.style.color = "#ff8ba5";
+  }
+}
+</script>
+{% endblock %}

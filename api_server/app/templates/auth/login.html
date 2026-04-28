@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}로그인 | 404 R·N·F AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+  <div class="auth-container">
+    <div class="auth-left">
+      <p class="auth-badge">AI 기반 도로 낙하물 탐지 시스템</p>
+      <h1>로그인</h1>
+      <p class="auth-desc">
+        아이디 또는 이메일로 로그인하여<br>
+        신고 등록, 내 신고 내역 확인, 관리자 기능을 이용할 수 있습니다.
+      </p>
+    </div>
+
+    <div class="auth-card">
+      <h2>회원 로그인</h2>
+      <p class="auth-subtext">아이디 또는 이메일과 비밀번호를 입력해주세요.</p>
+
+      <form id="login-form" class="auth-form">
+        <div class="form-group">
+          <label for="login_id">아이디 또는 이메일</label>
+          <input
+            type="text"
+            id="login_id"
+            name="login_id"
+            placeholder="아이디 또는 이메일 입력"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="password">비밀번호</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="비밀번호 입력"
+            required
+          >
+        </div>
+
+        <p id="login-message" class="form-message"></p>
+
+        <button type="submit" class="auth-submit-btn">로그인</button>
+      </form>
+
+      <div class="auth-bottom">
+        <span>아직 회원이 아니신가요?</span>
+        <a href="{{ url_for('auth.signup') }}">회원가입</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+{% endblock %}

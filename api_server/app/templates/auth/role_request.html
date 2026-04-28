@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}관리자 권한 신청 | 404 R·N·F AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+<style>
+.readonly-box {
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.readonly-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.readonly-item span {
+  color: #9fb0d0;
+}
+
+.readonly-item strong {
+  color: #ffffff;
+  text-align: right;
+}
+
+.request-status-box {
+  margin-bottom: 22px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(255, 107, 44, 0.10);
+  border: 1px solid rgba(255, 107, 44, 0.22);
+  color: #ffd7c7;
+  font-size: 0.95rem;
+}
+
+.auth-info-box {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.auth-info-item {
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.auth-info-item strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #ffffff;
+}
+
+.auth-info-item p {
+  margin: 0;
+  color: #c8d2e8;
+  line-height: 1.6;
+}
+
+.form-help {
+  margin: 2px 0 0;
+  font-size: 0.88rem;
+  color: #98a6c4;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.btn-line,
+.btn-primary {
+  flex: 1;
+  height: 50px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-weight: 700;
+  transition: 0.2s ease;
+}
+
+.btn-line {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: #ffffff;
+}
+
+.btn-line:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.btn-primary {
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #ff7a3d, #f05a28);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(240, 90, 40, 0.22);
+}
+
+@media (max-width: 640px) {
+  .readonly-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .readonly-item strong {
+    text-align: left;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+  <div class="auth-container">
+    <aside class="auth-left">
+      <div class="auth-badge">권한 관리</div>
+      <h1>관리자 권한 신청</h1>
+      <p class="auth-desc">
+        관리자 기능이 필요한 사유를 작성하면<br>
+        검토 후 승인 여부가 결정됩니다.
+      </p>
+
+      <div class="auth-info-box">
+        <div class="auth-info-item">
+          <strong>신청 대상</strong>
+          <p>신고 관리, 회원 관리, 대시보드 접근이 필요한 사용자</p>
+        </div>
+        <div class="auth-info-item">
+          <strong>검토 기준</strong>
+          <p>업무 목적의 명확성, 운영 필요성, 권한 남용 가능성 여부</p>
+        </div>
+        <div class="auth-info-item">
+          <strong>유의 사항</strong>
+          <p>허위 사유나 불명확한 내용은 반려될 수 있습니다.</p>
+        </div>
+      </div>
+    </aside>
+
+    <section class="auth-card">
+      <h2>권한 신청서 작성</h2>
+      <p class="auth-subtext">구체적인 운영 목적과 필요한 기능을 함께 적어주세요.</p>
+
+      <div class="readonly-box">
+        <div class="readonly-item">
+          <span>아이디</span>
+          <strong>{{ user.username }}</strong>
+        </div>
+        <div class="readonly-item">
+          <span>현재 권한</span>
+          <strong>{{ user.role }}</strong>
+        </div>
+        <div class="readonly-item">
+          <span>신청 구분</span>
+          <strong>관리자 권한 요청</strong>
+        </div>
+      </div>
+
+      <div class="request-status-box">
+        ● 신청 후 관리자 검토 대기 상태로 등록됩니다.
+      </div>
+
+      <form id="roleRequestForm" class="auth-form">
+        <div class="form-group">
+          <label for="request_reason">신청 사유</label>
+          <textarea
+            id="request_reason"
+            name="request_reason"
+            class="form-textarea"
+            rows="8"
+            placeholder="예) 관리자 대시보드에서 신고 상태를 검토하고 처리 결과를 관리해야 하므로 권한이 필요합니다."
+            required
+          ></textarea>
+          <p class="form-help">
+            현재 맡고 있는 역할, 필요한 메뉴, 사용 목적을 포함해서 작성하면 검토에 도움이 됩니다.
+          </p>
+        </div>
+
+        <p id="roleMessage" class="form-message"></p>
+
+        <div class="form-actions">
+          <a href="{{ url_for('report_list.my_reports_page') }}" class="btn-line">마이페이지로</a>
+          <button type="submit" class="btn-primary">권한 신청하기</button>
+        </div>
+      </form>
+    </section>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/role_request.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}404 R·N·F AI{% endblock %}</title>
+
+  <!-- 링크 미리보기용 -->
+  <meta property="og:title" content="404 R·N·F AI | 메인">
+  <meta property="og:description" content="여기를 눌러 링크를 확인하세요.">
+  <meta property="og:image" content="{{ url_for('static', filename='images/logo.png', _external=True) }}">
+  <meta property="og:url" content="{{ request.url }}">
+  <meta property="og:type" content="website">
+
+  <!-- 카카오/트위터 등 호환용 -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="404 R·N·F AI | 메인">
+  <meta name="twitter:description" content="여기를 눌러 링크를 확인하세요.">
+  <meta name="twitter:image" content="{{ url_for('static', filename='images/logo.png', _external=True) }}">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+
+  {% if is_logged_in and is_admin %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/realtime_alert.css') }}">
+  {% endif %}
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  {% include 'layout/header.html' %}
+
+  <main class="page-wrapper">
+    <div class="page-with-team-sidebar">
+      {% include 'layout/_team_sidebar.html' %}
+      <div class="page-content-area">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </main>
+
+  {% include 'layout/footer.html' %}
+
+  {% if is_logged_in and is_admin %}
+    <div id="realtime-alert-toast-container" class="realtime-alert-toast-container"></div>
+
+    <audio
+      id="sound-danger"
+      src="{{ url_for('static', filename='sounds/danger.mp3') }}"
+      preload="auto">
+    </audio>
+
+    <audio
+      id="sound-emergency"
+      src="{{ url_for('static', filename='sounds/emergency.mp3') }}"
+      preload="auto">
+    </audio>
+  {% endif %}
+
+  <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+
+  {% if is_logged_in and is_admin %}
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/realtime_alert.js') }}"></script>
+  {% endif %}
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,234 @@
+.cctv-container {
+  padding: 30px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.cctv-header {
+  margin-bottom: 30px;
+}
+
+.cctv-header h2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.cctv-header p {
+  color: #a0aec0;
+  font-size: 15px;
+}
+
+.cctv-split-layout {
+  display: flex;
+  gap: 30px;
+  height: calc(100vh - 200px);
+  min-height: 500px;
+}
+
+.cctv-panel {
+  flex: 1;
+  background-color: #1a2235;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.cctv-panel-header {
+  padding: 15px 20px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.cctv-panel-header h3 {
+  font-size: 18px;
+  color: #e2e8f0;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.live-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #f56565;
+  box-shadow: 0 0 8px rgba(245, 101, 101, 0.6);
+  animation: pulse-red 2s infinite;
+}
+
+.live-dot.its {
+  background-color: #4299e1;
+  box-shadow: 0 0 8px rgba(66, 153, 225, 0.6);
+  animation: pulse-blue 2s infinite;
+}
+
+@keyframes pulse-red {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 101, 101, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(245, 101, 101, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 101, 101, 0); }
+}
+
+@keyframes pulse-blue {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(66, 153, 225, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(66, 153, 225, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(66, 153, 225, 0); }
+}
+
+.cctv-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.multi-controls {
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.cctv-dropdown {
+  background: #0f172a;
+  color: #fff;
+  border: 1px solid #4a5568;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+  min-width: 150px;
+  max-width: 250px;
+}
+
+.cctv-dropdown:focus {
+  border-color: #3182ce;
+}
+
+.cctv-dropdown:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.region-select {
+  width: 120px;
+}
+
+.cam-select {
+  flex: 1;
+}
+
+.cctv-player-wrapper {
+  position: relative;
+  flex: 1;
+  background-color: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.cctv-video-stream {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background-color: #000;
+}
+
+.react-player-instance {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.cctv-overlay-info {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  pointer-events: none;
+  border-left: 3px solid #f56565;
+}
+
+.cctv-overlay-info.its-info {
+  border-left-color: #4299e1;
+}
+
+.cctv-error-msg, .cctv-status-msg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #a0aec0;
+  text-align: center;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.cctv-error-msg {
+  display: none;
+}
+
+.cctv-error-msg i {
+  font-size: 30px;
+  color: #fc8181;
+}
+
+.cctv-status-msg.error {
+  color: #fc8181;
+}
+
+.cctv-player-wrapper.error-state .cctv-video-stream {
+  opacity: 0;
+}
+
+.cctv-player-wrapper.error-state .cctv-error-msg {
+  display: flex;
+}
+
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: #3182ce;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 1100px) {
+  .cctv-split-layout {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .cctv-panel {
+    min-height: 400px;
+    height: 50vh;
+  }
+  
+  .cctv-controls.multi-controls {
+    flex: none;
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

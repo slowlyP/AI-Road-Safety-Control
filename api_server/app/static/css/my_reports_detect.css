@@ -1,0 +1,296 @@
+/* =========================
+   오늘 탐지 기록
+   ========================= */
+
+.detect-card {
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.today-detect-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.today-detect-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.today-detect-title-wrap {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.today-detect-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.today-live-dot {
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: #ff4d4f;
+  flex-shrink: 0;
+  box-shadow: 0 0 10px rgba(255, 77, 79, 0.55);
+  animation: livePulse 1.4s infinite;
+}
+
+@keyframes livePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 77, 79, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);
+  }
+}
+
+.today-detect-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detect-arrow {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+}
+
+.detect-arrow:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: scale(1.06);
+}
+
+.today-detect-slider {
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.today-detect-track {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  width: max-content;
+  will-change: auto;
+}
+
+.detect-slide-card {
+  flex: 0 0 280px;
+  min-height: 158px;
+  padding: 16px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(30, 43, 71, 0.92) 0%, rgba(24, 36, 62, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.16);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.detect-slide-card:hover {
+  transform: translateY(-4px);
+}
+
+.detect-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.detect-time {
+  font-size: 18px;
+  font-weight: 800;
+  color: #9fb1d1;
+  flex-shrink: 0;
+}
+
+.detect-card-body {
+  min-width: 0;
+}
+
+.detect-location {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.detect-title-text {
+  margin: 0;
+  font-size: 14px;
+  color: #9db1d6;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.detect-empty-box {
+  margin-top: 4px;
+}
+
+/* =========================
+   오늘 탐지 배지
+   ========================= */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 74px;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.status-icon {
+  display: inline-block;
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* 긴급 */
+.badge.danger {
+  color: #ffd5dc;
+  background: rgba(255, 82, 111, 0.22);
+  box-shadow: 0 0 14px rgba(255, 82, 111, 0.18);
+}
+
+.detect-slide-card.danger {
+  border-color: rgba(255, 82, 111, 0.50);
+  background:
+    linear-gradient(180deg, rgba(52, 24, 42, 0.92) 0%, rgba(34, 20, 38, 0.95) 100%),
+    linear-gradient(135deg, rgba(255, 82, 111, 0.10) 0%, rgba(255, 60, 60, 0.05) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 82, 111, 0.06),
+    0 0 20px rgba(255, 60, 60, 0.20),
+    0 10px 20px rgba(0, 0, 0, 0.18);
+}
+
+.detect-slide-card.danger .status-icon {
+  animation: sirenFlash 0.6s infinite alternate;
+  filter: drop-shadow(0 0 8px rgba(255, 60, 60, 0.95));
+}
+
+@keyframes sirenFlash {
+  from {
+    transform: scale(1);
+    filter: drop-shadow(0 0 4px rgba(255, 60, 60, 0.6));
+  }
+  to {
+    transform: scale(1.23);
+    filter: drop-shadow(0 0 12px rgba(255, 60, 60, 1));
+  }
+}
+
+/* 위험 */
+.badge.warning {
+  color: #ffe7b5;
+  background: rgba(245, 158, 11, 0.22);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.16);
+}
+
+.detect-slide-card.warning {
+  border-color: rgba(255, 160, 32, 0.46);
+  background:
+    linear-gradient(180deg, rgba(56, 34, 20, 0.92) 0%, rgba(38, 26, 18, 0.95) 100%),
+    linear-gradient(135deg, rgba(255, 160, 32, 0.10) 0%, rgba(255, 140, 0, 0.05) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 160, 32, 0.05),
+    0 0 18px rgba(255, 140, 0, 0.18),
+    0 10px 20px rgba(0, 0, 0, 0.18);
+}
+
+.detect-slide-card.warning .status-icon {
+  animation: warningPulse 1.2s infinite;
+  filter: drop-shadow(0 0 6px rgba(255, 153, 0, 0.88));
+}
+
+@keyframes warningPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.14);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 주의 */
+.badge.caution {
+  color: #ffe29b;
+  background: rgba(255, 204, 0, 0.20);
+  box-shadow: 0 0 14px rgba(255, 208, 0, 0.14);
+}
+
+.detect-slide-card.caution {
+  border-color: rgba(255, 214, 10, 0.42);
+  background:
+    linear-gradient(180deg, rgba(58, 48, 20, 0.92) 0%, rgba(40, 34, 18, 0.95) 100%),
+    linear-gradient(135deg, rgba(255, 214, 10, 0.10) 0%, rgba(255, 215, 0, 0.04) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 214, 10, 0.05),
+    0 0 16px rgba(255, 215, 0, 0.16),
+    0 10px 20px rgba(0, 0, 0, 0.18);
+}
+
+.detect-slide-card.caution .status-icon {
+  animation: electricBlink 1.5s infinite;
+  filter: drop-shadow(0 0 6px rgba(255, 217, 0, 0.9));
+}
+
+@keyframes electricBlink {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 기본/안전 */
+.badge.safe {
+  color: #b7f8d7;
+  background: rgba(16, 185, 129, 0.18);
+}
+
+.detect-slide-card.safe {
+  border-color: rgba(16, 185, 129, 0.3);
+  box-shadow:
+    0 0 0 1px rgba(16, 185, 129, 0.04),
+    0 0 15px rgba(16, 185, 129, 0.12),
+    0 10px 20px rgba(0, 0, 0, 0.18);
+}

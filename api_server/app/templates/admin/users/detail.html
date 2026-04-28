@@ -1,0 +1,243 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}회원 상세{% endblock %}
+
+{% block admin_extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_users.css') }}">
+{% endblock %}
+
+{% block admin_content %}
+
+<section class="admin-panel">
+
+  <div class="admin-page-header">
+    <div>
+      <h1 class="admin-page-title">회원 상세</h1>
+      <p class="admin-page-desc">
+        회원 기본 정보, 권한 신청 이력, 신고 이력을 확인하고 권한을 변경할 수 있습니다.
+      </p>
+    </div>
+  </div>
+
+  <div class="user-detail-grid">
+
+    <!-- 회원 기본 정보 -->
+    <div class="user-history-card">
+      <h2 class="user-history-title">회원 기본 정보</h2>
+
+      <div class="detail-list">
+        <div class="detail-item">
+          <span class="detail-label">회원 ID</span>
+          <div class="detail-value">{{ user.id }}</div>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">아이디</span>
+          <div class="detail-value">{{ user.username }}</div>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">이름</span>
+          <div class="detail-value">{{ user.name }}</div>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">이메일</span>
+          <div class="detail-value">{{ user.email }}</div>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">현재 권한</span>
+          <div class="detail-value">
+            {% if user.role == "admin" %}
+              <span class="badge badge-danger">관리자</span>
+            {% else %}
+              <span class="badge badge-success">일반회원</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">가입일</span>
+          <div class="detail-value">{{ user.created_at }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 권한 변경 -->
+    <div class="user-history-card">
+      <h2 class="user-history-title">권한 변경</h2>
+
+      <form
+        method="POST"
+        action="{{ url_for('admin_user.update_user_role', user_id=user.id) }}"
+        class="status-form"
+      >
+        <div class="status-current-box">
+          <span class="status-current-label">현재 권한</span>
+
+          {% if user.role == "admin" %}
+            <span class="badge badge-danger">관리자</span>
+          {% else %}
+            <span class="badge badge-success">일반회원</span>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="role" class="form-label">변경할 권한</label>
+          <select id="role" name="role" class="form-select" required>
+            <option value="">권한 선택</option>
+            <option value="user" {% if user.role == "user" %}selected{% endif %}>일반회원</option>
+            <option value="admin" {% if user.role == "admin" %}selected{% endif %}>관리자</option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn">권한 변경</button>
+          <a href="{{ url_for('admin_user.user_list') }}" class="btn-secondary">목록으로</a>
+        </div>
+      </form>
+
+      <form
+        method="POST"
+        action="{{ url_for('admin_user.delete_user', user_id=user.id) }}"
+        class="delete-form"
+        style="margin-top: 14px;"
+        onsubmit="return confirm('정말 이 회원을 삭제하시겠습니까?');"
+      >
+        <button type="submit" class="btn-danger">회원 삭제</button>
+      </form>
+    </div>
+
+  </div>
+<br>
+  <!-- 권한 신청 이력 -->
+  <div class="user-history-card">
+  <h2 class="user-history-title">권한 신청 이력</h2>
+
+  {% if role_requests %}
+    <div class="history-list">
+      {% for req in role_requests %}
+        <div class="history-item">
+          <div class="history-main">
+            <strong>신청 상태:</strong>
+            {% if req.status == "승인" %}
+              <span class="badge badge-success">{{ req.status }}</span>
+            {% elif req.status == "거절" %}
+              <span class="badge badge-danger">{{ req.status }}</span>
+            {% else %}
+              <span class="badge badge-pending">{{ req.status }}</span>
+            {% endif %}
+          </div>
+
+          <div class="history-sub">
+            신청일: {{ req.created_at }}
+          </div>
+
+          <div class="history-sub">
+            신청 사유: {{ req.request_reason or "-" }}
+          </div>
+
+          <div class="history-sub">
+            처리 관리자: {{ req.reviewed_by_name or "-" }} /
+            처리 시각: {{ req.reviewed_at or "-" }}
+          </div>
+
+          {% if req.status == "대기" %}
+            <div class="history-actions" style="display:flex; gap:8px; margin-top:10px;">
+              <form method="POST" action="{{ url_for('admin_user.review_role_request', request_id=req.id) }}">
+                <input type="hidden" name="status" value="승인">
+                <button type="submit" class="btn">승인</button>
+              </form>
+
+              <form method="POST" action="{{ url_for('admin_user.review_role_request', request_id=req.id) }}">
+                <input type="hidden" name="status" value="거절">
+                <button type="submit" class="btn-danger">거절</button>
+              </form>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-box">
+      권한 신청 이력이 없습니다.
+    </div>
+  {% endif %}
+</div>
+
+  <!-- 신고 이력 -->
+  <div class="user-history-card" style="margin-top: 24px;">
+    <h2 class="user-history-title">신고 이력</h2>
+
+    {% if reports %}
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th class="text-left">제목</th>
+              <th>위험도</th>
+              <th>상태</th>
+              <th>등록일</th>
+              <th>상세</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for report in reports %}
+              <tr>
+                <td>{{ report.id }}</td>
+
+                <td class="text-left">
+                  {{ report.title }}
+                </td>
+
+                <td>
+                  {% if report.risk_level == '긴급' %}
+                    <span class="badge badge-danger">{{ report.risk_level }}</span>
+                  {% elif report.risk_level == '위험' %}
+                    <span class="badge badge-risk">{{ report.risk_level }}</span>
+                  {% elif report.risk_level == '주의' %}
+                    <span class="badge badge-warning">{{ report.risk_level }}</span>
+                  {% else %}
+                    <span class="badge badge-success">{{ report.risk_level }}</span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if report.status == '처리완료' %}
+                    <span class="badge badge-success">{{ report.status }}</span>
+                  {% elif report.status == '오탐' %}
+                    <span class="badge badge-secondary">{{ report.status }}</span>
+                  {% elif report.status == '확인중' %}
+                    <span class="badge badge-warning">{{ report.status }}</span>
+                  {% else %}
+                    <span class="badge badge-status">{{ report.status }}</span>
+                  {% endif %}
+                </td>
+
+                <td>{{ report.created_at }}</td>
+
+                <td>
+                  <a
+                    href="{{ url_for('admin_report.report_detail', report_id=report.id) }}"
+                    class="btn-secondary"
+                  >
+                    상세보기
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-box">
+        등록된 신고 이력이 없습니다.
+      </div>
+    {% endif %}
+  </div>
+
+</section>
+
+{% endblock %}

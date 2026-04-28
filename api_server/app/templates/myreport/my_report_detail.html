@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}신고 상세보기 | 404 R·N·F AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/report_detail.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="detail-page">
+
+  <!-- flash 메시지 출력 -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-message-wrap">
+      {% for category, message in messages %}
+      <div class="toast-message toast-{{ category }}">
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- 상단 헤더 -->
+  <div class="detail-header">
+    <div class="detail-title-wrap">
+      <h2 class="detail-page-title">신고 상세보기</h2>
+      <p class="detail-page-subtitle">신고한 내용을 자세히 확인할 수 있습니다.</p>
+    </div>
+
+    <a href="{{ url_for('report_list.my_reports_page') }}" class="back-btn">
+      목록으로
+    </a>
+  </div>
+
+  <!-- 상세 카드 -->
+  <section class="detail-main-card">
+
+    <!-- 제목 + 상태 -->
+    <div class="detail-top">
+      <div class="detail-title-box">
+        <h3 class="detail-title">{{ report.title or '-' }}</h3>
+        <p class="detail-created-at">{{ report.created_at or '-' }}</p>
+      </div>
+
+      <span class="status-badge
+        {% if report.status == '접수' %}status-received{% endif %}
+        {% if report.status == '확인중' %}status-checking{% endif %}
+        {% if report.status == '처리완료' or report.status == '처리 완료' %}status-done{% endif %}
+        {% if report.status == '오탐' %}status-false{% endif %}
+      ">
+        {{ report.status or '-' }}
+      </span>
+    </div>
+
+    <!-- 기본 정보 -->
+    <div class="detail-info-grid">
+      <div class="detail-info-item">
+        <span class="detail-info-label">신고 유형</span>
+        <p class="detail-info-value">{{ report.report_type or '-' }}</p>
+      </div>
+
+      <div class="detail-info-item">
+        <span class="detail-info-label">위치</span>
+        <p class="detail-info-value">{{ report.location_text or '위치 정보 없음' }}</p>
+      </div>
+    </div>
+
+    <!-- 신고 내용 -->
+    <div class="detail-section">
+      <h4 class="detail-section-title">신고 내용</h4>
+      <div class="detail-content-box">
+        {{ report.content or '내용이 없습니다.' }}
+      </div>
+    </div>
+
+    <!-- 첨부파일 -->
+    <div class="detail-section">
+      <h4 class="detail-section-title">첨부파일</h4>
+
+      <div class="detail-image-preview" id="detail-image-preview">
+        {% if report.file_url and report.file_type == "이미지" %}
+        <div class="file-preview-item">
+          <img
+            src="{{ report.file_url }}"
+            alt="신고 이미지"
+            class="detail-image-file"
+          >
+        </div>
+
+        {% elif report.file_url and report.file_type == "영상" %}
+        <div class="file-preview-item">
+          <video controls class="detail-video-preview">
+            <source src="{{ report.file_url }}" type="video/mp4">
+            브라우저가 영상을 지원하지 않습니다.
+          </video>
+        </div>
+
+        {% elif report.file_url %}
+        <div class="file-preview-item">
+          <a href="{{ report.file_url }}" target="_blank" class="file-view-btn">
+            파일 보기
+          </a>
+        </div>
+
+        {% else %}
+        <p class="detail-empty-text">등록된 파일이 없습니다.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- 버튼 영역 -->
+    <div class="detail-action-row">
+      {% if report.status == '접수' %}
+      <a
+        href="{{ url_for('report_list.edit_report_page', report_id=report.id) }}"
+        class="edit-btn"
+      >
+        수정
+      </a>
+      {% else %}
+      <button type="button" class="edit-btn disabled-btn" disabled>
+        수정 불가
+      </button>
+      {% endif %}
+
+      <form
+        action="{{ url_for('report_list.delete_report', report_id=report.id) }}"
+        method="post"
+        class="inline-form"
+      >
+        <button
+          type="submit"
+          class="delete-btn"
+          onclick="return confirm('정말 삭제하시겠습니까?');"
+        >
+          삭제
+        </button>
+      </form>
+    </div>
+
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  setTimeout(function () {
+    const toastMessages = document.querySelectorAll(".toast-message");
+    toastMessages.forEach(function (msg) {
+      msg.style.display = "none";
+    });
+  }, 3000);
+</script>
+{% endblock %}

@@ -1,0 +1,335 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}관리자 대시보드{% endblock %}
+
+{% block admin_extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_dashboard.css') }}">
+{% endblock %}
+
+{% block admin_content %}
+<section class="admin-dashboard">
+
+  <div class="dashboard-header">
+    <div class="dashboard-title-wrap">
+      <h1 class="dashboard-title">관리자 대시보드</h1>
+      <p class="dashboard-desc">시스템 전체 현황을 한눈에 확인할 수 있습니다.</p>
+    </div>
+  </div>
+
+  <!-- 상단 요약 카드 -->
+  <div class="dashboard-summary">
+    <div class="summary-card">
+      <div class="summary-card-label">총 회원</div>
+      <div class="summary-card-value">{{ stats.total_users }}</div>
+      <div class="summary-card-subtext">전체 가입 사용자 수</div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-card-label">총 신고</div>
+      <div class="summary-card-value">{{ stats.total_reports }}</div>
+      <div class="summary-card-subtext">누적 신고 건수</div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-card-label">접수 상태</div>
+      <div class="summary-card-value">{{ stats.status_stats.get("접수", 0) }}</div>
+      <div class="summary-card-subtext">현재 접수 상태 건수</div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-card-label">처리 완료</div>
+      <div class="summary-card-value">{{ stats.status_stats.get("처리완료", 0) }}</div>
+      <div class="summary-card-subtext">처리 완료된 신고 수</div>
+    </div>
+  </div>
+
+  <!-- 차트 영역 -->
+  <div class="dashboard-chart-layout">
+
+    <!-- 왼쪽: 도넛 2개 -->
+    <div class="dashboard-panel">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">분포 차트</h2>
+          <p class="panel-desc">위험도와 처리 상태 분포를 확인합니다.</p>
+        </div>
+      </div>
+
+      <div class="donut-grid">
+        <div class="mini-chart-card">
+          <h3 class="mini-chart-title">위험도 분포</h3>
+          <div class="chart-box small-chart-box">
+            <canvas id="riskChart"></canvas>
+          </div>
+        </div>
+
+        <div class="mini-chart-card">
+          <h3 class="mini-chart-title">처리 상태 분포</h3>
+          <div class="chart-box small-chart-box">
+            <canvas id="statusChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 오른쪽: 막대 그래프 -->
+    <div class="dashboard-panel">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">전월 신고 / 처리 현황</h2>
+          <p class="panel-desc">월간 신고 및 처리 현황을 비교합니다.</p>
+        </div>
+      </div>
+
+      <div class="chart-box bar-chart-box">
+        <canvas id="monthlyBarChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 최근 신고 -->
+  <div class="dashboard-panel">
+    <div class="panel-header">
+      <div>
+        <h2 class="panel-title">최근 신고</h2>
+        <p class="panel-desc">최근 등록된 신고 목록입니다.</p>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>제목</th>
+            <th>위험도</th>
+            <th>상태</th>
+            <th>등록일</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if stats.recent_reports %}
+            {% for r in stats.recent_reports %}
+            <tr>
+              <td>{{ r.id }}</td>
+              <td class="text-left">
+                <a href="{{ url_for('admin_report.report_detail', report_id=r.id) }}">
+                  {{ r.title }}
+                </a>
+              </td>
+              <td>{{ r.risk_level }}</td>
+              <td>{{ r.status }}</td>
+              <td>{{ r.created_at }}</td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="5" class="empty-message">최근 신고가 없습니다.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+<div class="dashboard-panel">
+  <div class="panel-header">
+    <div>
+      <h2 class="panel-title">대기 중인 권한 신청</h2>
+      <p class="panel-desc">
+        관리자 권한 요청을 확인하고 바로 승인 또는 거절할 수 있습니다.
+      </p>
+    </div>
+
+    <div>
+      <a href="{{ url_for('admin_user.role_request_list') }}" class="btn-secondary">
+        전체 보기
+      </a>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>요청 ID</th>
+          <th>신청자</th>
+          <th class="text-left">신청 사유</th>
+          <th>신청일</th>
+          <th>회원 상세</th>
+          <th>처리</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% if stats.pending_role_requests %}
+          {% for req in stats.pending_role_requests %}
+            <tr>
+              <td>{{ req.id }}</td>
+              <td>{{ req.name }} ({{ req.username }})</td>
+              <td class="text-left">{{ req.request_reason or "-" }}</td>
+              <td>{{ req.created_at }}</td>
+              <td>
+                <a
+                  href="{{ url_for('admin_user.user_detail', user_id=req.user_id) }}"
+                  class="btn-secondary"
+                >
+                  회원 보기
+                </a>
+              </td>
+              <td>
+                <div style="display:flex; gap:8px; justify-content:center;">
+                  <form method="POST" action="{{ url_for('admin_user.review_role_request', request_id=req.id) }}">
+                    <input type="hidden" name="status" value="승인">
+                    <button type="submit" class="btn">승인</button>
+                  </form>
+
+                  <form method="POST" action="{{ url_for('admin_user.review_role_request', request_id=req.id) }}">
+                    <input type="hidden" name="status" value="거절">
+                    <button type="submit" class="btn-danger">거절</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="6" class="empty-message">
+              대기 중인 권한 신청이 없습니다.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const riskData = {
+  labels: ["낮음", "주의", "위험", "긴급"],
+  datasets: [{
+    data: [
+      {{ stats.risk_stats.get("낮음", 0) }},
+      {{ stats.risk_stats.get("주의", 0) }},
+      {{ stats.risk_stats.get("위험", 0) }},
+      {{ stats.risk_stats.get("긴급", 0) }}
+    ],
+    backgroundColor: ["#4CAF50", "#FFC107", "#FF5722", "#E53935"],
+    borderWidth: 2,
+    borderColor: "#1a2238"
+  }]
+};
+
+const statusData = {
+  labels: ["접수", "확인중", "처리완료", "오탐"],
+  datasets: [{
+    data: [
+      {{ stats.status_stats.get("접수", 0) }},
+      {{ stats.status_stats.get("확인중", 0) }},
+      {{ stats.status_stats.get("처리완료", 0) }},
+      {{ stats.status_stats.get("오탐", 0) }}
+    ],
+    backgroundColor: ["#42A5F5", "#FFA726", "#66BB6A", "#BDBDBD"],
+    borderWidth: 2,
+    borderColor: "#1a2238"
+  }]
+};
+
+/* 임시 월간 데이터 */
+const monthlyBarData = {
+  labels: ["전월 신고", "전월 처리", "이번달 신고", "이번달 처리"],
+  datasets: [{
+    label: "건수",
+    data: [
+      {{ stats.total_reports }},
+      {{ stats.status_stats.get("처리완료", 0) }},
+      {{ stats.total_reports }},
+      {{ stats.status_stats.get("처리완료", 0) }}
+    ],
+    backgroundColor: ["#5B8DEF", "#66BB6A", "#FFA726", "#FF6B57"],
+    borderRadius: 8,
+    maxBarThickness: 42
+  }]
+};
+
+const commonLegendStyle = {
+  labels: {
+    color: "#dbe4f7",
+    boxWidth: 14,
+    padding: 14,
+    font: {
+      size: 12
+    }
+  }
+};
+
+new Chart(document.getElementById("riskChart"), {
+  type: "doughnut",
+  data: riskData,
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: "58%",
+    plugins: {
+      legend: {
+        position: "top",
+        ...commonLegendStyle
+      }
+    }
+  }
+});
+
+new Chart(document.getElementById("statusChart"), {
+  type: "doughnut",
+  data: statusData,
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: "58%",
+    plugins: {
+      legend: {
+        position: "top",
+        ...commonLegendStyle
+      }
+    }
+  }
+});
+
+new Chart(document.getElementById("monthlyBarChart"), {
+  type: "bar",
+  data: monthlyBarData,
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: "#cfd7ea"
+        },
+        grid: {
+          display: false
+        }
+      },
+      y: {
+        beginAtZero: true,
+        ticks: {
+          color: "#cfd7ea",
+          stepSize: 1
+        },
+        grid: {
+          color: "rgba(255,255,255,0.08)"
+        }
+      }
+    }
+  }
+});
+</script>
+
+{% endblock %}

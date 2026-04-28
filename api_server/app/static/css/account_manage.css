@@ -1,0 +1,361 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f6f6f8;
+  color: #1f2937;
+  font-family: "Pretendard", "Malgun Gothic", sans-serif;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* 페이지 영역 */
+.account-page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 28px 22px 60px;
+}
+
+.account-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+/* 공통 카드 */
+.account-side,
+.account-card {
+  background: #fff;
+  border: 1px solid #ececec;
+  border-radius: 18px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+}
+
+/* 왼쪽 안내 카드 */
+.account-side {
+  padding: 24px;
+  position: sticky;
+  top: 24px;
+}
+
+.side-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #fff1eb;
+  color: #f05a28;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.side-title {
+  margin: 0 0 12px;
+  font-size: 28px;
+  line-height: 1.3;
+  color: #111827;
+}
+
+.side-desc {
+  margin: 0 0 22px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #6b7280;
+}
+
+.side-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.side-info-item {
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.side-info-item strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #111827;
+}
+
+.side-info-item p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #8b8f97;
+}
+
+/* 오른쪽 폼 카드 */
+.account-card {
+  padding: 28px;
+}
+
+.account-card-header {
+  margin-bottom: 24px;
+}
+
+.account-card-title {
+  margin: 0 0 8px;
+  font-size: 26px;
+  color: #111827;
+}
+
+.account-card-subtext {
+  margin: 0;
+  font-size: 14px;
+  color: #8b8f97;
+}
+
+/* 폼 */
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group.full {
+  grid-column: 1 / -1;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fcfcfd;
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #111827;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+  border-color: #ff8b66;
+  box-shadow: 0 0 0 4px rgba(240, 90, 40, 0.08);
+  background: #fff;
+}
+
+.form-input[disabled] {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.form-textarea {
+  min-height: 170px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.form-help {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #9aa1ac;
+  line-height: 1.5;
+}
+
+/* 읽기 전용 정보 박스 */
+.readonly-box {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 6px;
+}
+
+.readonly-item {
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.readonly-item span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #9aa1ac;
+}
+
+.readonly-item strong {
+  font-size: 14px;
+  color: #111827;
+}
+
+/* 경고 박스 */
+.warning-box {
+  background: #fff7f7;
+  border: 1px solid #ffd9d9;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.warning-box h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  color: #dc2626;
+}
+
+.warning-box ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #7f1d1d;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* 상태 메시지 */
+.form-message {
+  min-height: 22px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #8b8f97;
+}
+
+/* 버튼 */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.btn-line,
+.btn-primary,
+.btn-danger {
+  min-width: 140px;
+  height: 46px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-line {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
+}
+
+.btn-line:hover {
+  background: #f9fafb;
+}
+
+.btn-primary {
+  border: none;
+  background: #f05a28;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #de4e1f;
+}
+
+.btn-danger {
+  border: none;
+  background: #dc2626;
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
+}
+
+/* 관리자 권한 신청용 상태 배지 */
+.request-status-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #fff4d8;
+  color: #d97706;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+/* 반응형 */
+@media (max-width: 1100px) {
+  .account-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .account-side {
+    position: static;
+  }
+
+  .readonly-box {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .account-page {
+    padding: 20px 16px 40px;
+  }
+
+  .account-card,
+  .account-side {
+    padding: 20px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn-line,
+  .btn-primary,
+  .btn-danger {
+    width: 100%;
+  }
+
+  .side-title,
+  .account-card-title {
+    font-size: 22px;
+  }
+}

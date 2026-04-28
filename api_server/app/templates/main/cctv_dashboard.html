@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+<style>
+    .dashboard-container {
+        display: flex;
+        gap: 15px;
+        padding: 20px;
+        height: 75vh;
+        background: #121212;
+    }
+
+    .monitor-section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #1e1e1e;
+        border-radius: 12px;
+        border: 2px solid #333;
+        overflow: hidden;
+    }
+
+    .monitor-header {
+        background: #2d2d2d;
+        padding: 12px 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #444;
+    }
+
+    .video-area {
+        flex: 1;
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    video,
+    img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    /* 컨트롤러 영역 */
+    .control-panel {
+        padding: 20px;
+        background: #252525;
+    }
+
+    .select-label {
+        display: block;
+        color: #aaa;
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+    }
+
+    /* 드롭다운 및 버튼 스타일 */
+    .custom-select,
+    .cam-btn {
+        width: 100%;
+        padding: 10px;
+        background: #333;
+        color: white;
+        border: 1px solid #555;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .btn-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .cam-btn.active {
+        background: #007bff;
+        border-color: #007bff;
+    }
+</style>
+
+<div class="container-fluid">
+    <h2 class="text-white mb-3">🛡️ Eklar AI Dual Monitoring</h2>
+
+    <div class="dashboard-container">
+
+        <div class="monitor-section">
+            <div class="monitor-header">
+                <h3 id="leftTitle" style="font-size: 1rem; color: #00ff00; margin:0;">CH 00 - WEB CAM</h3>
+                <span style="color: #ff4444; font-size: 0.8rem;">● AI ANALYZING</span>
+            </div>
+            <div class="video-area">
+                <img id="leftFeed" src="{{ url_for('realtime_monitor.video_feed', cam_id=0) }}">
+            </div>
+            <div class="control-panel">
+                <span class="select-label">내부 카메라 선택</span>
+                <div class="btn-grid">
+                    <button class="cam-btn active" onclick="changeLeft(0, 'USB WEB CAM', this)">USB 캠</button>
+                    <button class="cam-btn" onclick="changeLeft(1, 'IP CAM 1', this)">IP CAM 1</button>
+                    <button class="cam-btn" onclick="changeLeft(2, 'IP CAM 2', this)">IP CAM 2</button>
+                    <button class="cam-btn" onclick="changeLeft(3, 'IP CAM 3', this)">IP CAM 3</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="monitor-section">
+            <div class="monitor-header">
+                <h3 id="rightTitle" style="font-size: 1rem; color: #00c3ff; margin:0;">Road CCTV (ITS)</h3>
+                <span style="color: #00c3ff; font-size: 0.8rem;">● PUBLIC DATA</span>
+            </div>
+            <div class="video-area">
+                <video id="rightPlayer" controls autoplay muted style="width: 100%;"></video>
+            </div>
+            <div class="control-panel">
+                <span class="select-label">ITS 도로 CCTV 선택</span>
+                <select class="custom-select" onchange="changeRight(this.value, this.options[this.selectedIndex].text)">
+                    <option value="">-- 카메라를 선택하세요 --</option>
+                    {% for cam in cameras %}
+                    <option value="{{ cam.cctvurl }}">{{ cam.cctvname }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    var hls = new Hls();
+    var rightPlayer = document.getElementById("rightPlayer");
+
+    // 왼쪽 카메라 변경
+    function changeLeft(camId, name, btn) {
+        document.querySelectorAll('.monitor-section:first-child .cam-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById("leftTitle").innerText = name;
+        document.getElementById("leftFeed").src = "{{ url_for('realtime_monitor.video_feed', cam_id=0) }}".replace('0', camId);
+    }
+
+    // 오른쪽 ITS 카메라 변경 (드롭다운 onchange)
+    function changeRight(url, name) {
+        if (!url) return;
+        document.getElementById("rightTitle").innerText = name;
+
+        if (Hls.isSupported()) {
+            hls.loadSource(url);
+            hls.attachMedia(rightPlayer);
+            hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                rightPlayer.play();
+            });
+        } else if (rightPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+            rightPlayer.src = url;
+            rightPlayer.play();
+        }
+    }
+</script>
+{% endblock %}

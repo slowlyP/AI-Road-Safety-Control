@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block title %}자유게시판{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/board.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper board-list-page">
+  <section class="board-list-section">
+    <div class="board-list-container">
+
+      <!-- 상단 제목 / 글쓰기 버튼 -->
+      <div class="board-list-hero">
+        <div class="board-list-hero-text">
+          <span class="board-page-badge">COMMUNITY</span>
+          <h1>자유게시판</h1>
+          <p>프로젝트 관련 의견, 질문, 자유로운 소통을 나누는 공간입니다.</p>
+        </div>
+
+        {% if session.get('user_id') %}
+          <a href="{{ url_for('board.board_create') }}" class="btn btn-primary">글쓰기</a>
+        {% endif %}
+      </div>
+
+      <!-- 한 줄 필터바 -->
+      <div class="board-search-card">
+        <form
+          method="GET"
+          action="{{ url_for('board.board_list') }}"
+          class="board-filter-form"
+          id="boardFilterForm"
+        >
+          <!-- 공지글 필터 -->
+          <label class="board-filter-check board-filter-check-notice {% if notice == '1' %}is-active{% endif %}">
+            <input
+              type="checkbox"
+              name="notice"
+              value="1"
+              {% if notice == "1" %}checked{% endif %}
+            >
+            <span>공지글</span>
+          </label>
+
+          <!-- 내 글 필터 -->
+          {% if session.get('user_id') %}
+            <label class="board-filter-check board-filter-check-my {% if my == '1' %}is-active{% endif %}">
+              <input
+                type="checkbox"
+                name="my"
+                value="1"
+                {% if my == "1" %}checked{% endif %}
+              >
+              <span>내 글</span>
+            </label>
+          {% endif %}
+
+          <!-- 제목/내용 검색 -->
+          <div class="board-filter-input-box board-filter-keyword">
+            <input
+              type="text"
+              name="keyword"
+              value="{{ keyword if keyword else '' }}"
+              class="board-filter-input"
+              placeholder="제목 또는 내용 검색"
+            >
+          </div>
+
+          <!-- 작성자 검색 -->
+          <div class="board-filter-input-box board-filter-writer">
+            <input
+              type="text"
+              name="writer"
+              value="{{ writer if writer else '' }}"
+              class="board-filter-input"
+              placeholder="작성자 검색"
+            >
+          </div>
+
+          <!-- 정렬 필터 -->
+          <div class="board-filter-select-box">
+            <select name="sort" class="board-filter-select" id="boardSortSelect">
+              <option value="latest" {% if sort == "latest" %}selected{% endif %}>최신순</option>
+              <option value="oldest" {% if sort == "oldest" %}selected{% endif %}>과거순</option>
+              <option value="view" {% if sort == "view" %}selected{% endif %}>조회순</option>
+            </select>
+          </div>
+
+          <!-- 검색 버튼 -->
+          <button type="submit" class="btn btn-primary board-filter-submit">검색</button>
+
+          <!-- 초기화 버튼 -->
+          {% if keyword or notice == "1" or my == "1" or writer or sort != "latest" %}
+            <a href="{{ url_for('board.board_list') }}" class="btn btn-outline board-filter-reset">초기화</a>
+          {% endif %}
+        </form>
+      </div>
+
+      <!-- 게시글 목록 -->
+      <div class="board-table-card">
+        <div class="board-table-head">
+          <div>
+            <h2>게시글 목록</h2>
+            <p>
+              {% if keyword %}
+                "{{ keyword }}" 검색 결과 / 총 {{ total }}건
+              {% elif notice == "1" %}
+                공지글 목록 / 총 {{ total }}건
+              {% elif my == "1" %}
+                내 게시글 목록 / 총 {{ total }}건
+              {% elif writer %}
+                "{{ writer }}" 작성자 검색 결과 / 총 {{ total }}건
+              {% else %}
+                전체 게시글 {{ total }}건을 확인할 수 있습니다.
+              {% endif %}
+            </p>
+          </div>
+        </div>
+
+        {% if posts %}
+          <div class="board-table-wrap">
+            <table class="board-table">
+              <thead>
+                <tr>
+                  <th class="col-id">번호</th>
+                  <th class="col-title">제목</th>
+                  <th class="col-writer">작성자</th>
+                  <th class="col-date">작성일</th>
+                  <th class="col-view">조회수</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for post in posts %}
+                  <tr>
+                    <!-- 게시글 번호 -->
+                    <td class="col-id">{{ post.id }}</td>
+
+                    <!-- 제목 / 공지 / 미리보기 -->
+                    <td class="col-title">
+                      <a href="{{ url_for('board.board_detail', post_id=post.id) }}" class="board-post-link">
+                        <div class="board-post-title-line">
+                          {% if post.is_notice %}
+                            <span class="board-chip board-chip-notice">공지</span>
+                          {% endif %}
+                          <span class="board-post-title-text">{{ post.title }}</span>
+                        </div>
+
+                        <div class="board-post-preview">
+                          {{ post.content[:80] }}{% if post.content|length > 80 %}...{% endif %}
+                        </div>
+                      </a>
+                    </td>
+
+                    <!-- 작성자 -->
+                    <td class="col-writer">
+                      {{ post.user.name if post.user else '-' }}
+                    </td>
+
+                    <!-- 작성일 -->
+                    <td class="col-date">
+                      {{ post.created_at.strftime('%Y-%m-%d') if post.created_at else '-' }}
+                    </td>
+
+                    <!-- 조회수 -->
+                    <td class="col-view">
+                      {{ post.view_count }}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 페이징 -->
+          {% if total_pages > 1 %}
+            <div class="board-pagination">
+              <!-- 이전 버튼 -->
+              {% if page > 1 %}
+                <a
+                  href="{{ url_for('board.board_list', keyword=keyword, notice=notice, my=my, writer=writer, sort=sort, page=page-1) }}"
+                  class="board-page-btn board-page-nav"
+                >
+                  이전
+                </a>
+              {% else %}
+                <span class="board-page-btn board-page-nav is-disabled">이전</span>
+              {% endif %}
+
+              <!-- 페이지 번호 -->
+              <div class="board-page-numbers">
+                {% for p in range(1, total_pages + 1) %}
+                  {% if total_pages <= 10 %}
+                    <a
+                      href="{{ url_for('board.board_list', keyword=keyword, notice=notice, my=my, writer=writer, sort=sort, page=p) }}"
+                      class="board-page-btn {% if p == page %}is-active{% endif %}"
+                    >
+                      {{ p }}
+                    </a>
+                  {% else %}
+                    {% if p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                      <a
+                        href="{{ url_for('board.board_list', keyword=keyword, notice=notice, my=my, writer=writer, sort=sort, page=p) }}"
+                        class="board-page-btn {% if p == page %}is-active{% endif %}"
+                      >
+                        {{ p }}
+                      </a>
+                    {% elif p == 2 and page > 4 %}
+                      <span class="board-page-dots">...</span>
+                    {% elif p == total_pages - 1 and page < total_pages - 3 %}
+                      <span class="board-page-dots">...</span>
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+              </div>
+
+              <!-- 다음 버튼 -->
+              {% if page < total_pages %}
+                <a
+                  href="{{ url_for('board.board_list', keyword=keyword, notice=notice, my=my, writer=writer, sort=sort, page=page+1) }}"
+                  class="board-page-btn board-page-nav"
+                >
+                  다음
+                </a>
+              {% else %}
+                <span class="board-page-btn board-page-nav is-disabled">다음</span>
+              {% endif %}
+            </div>
+          {% endif %}
+
+        {% else %}
+          <!-- 게시글 없을 때 -->
+          <div class="board-empty-state">
+            <div class="board-empty-icon">📝</div>
+            <h3>조건에 맞는 게시글이 없습니다.</h3>
+            <p>검색어나 필터 조건을 바꿔서 다시 확인해보세요.</p>
+
+            <div class="board-empty-actions">
+              <a href="{{ url_for('board.board_list') }}" class="btn btn-outline">전체 목록 보기</a>
+
+              {% if session.get('user_id') %}
+                <a href="{{ url_for('board.board_create') }}" class="btn btn-primary">글 작성하기</a>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const filterForm = document.getElementById("boardFilterForm");
+    if (!filterForm) return;
+
+    // 체크박스 / 정렬 select 는 변경 즉시 검색
+    const autoSubmitTargets = filterForm.querySelectorAll(
+      'input[type="checkbox"], select'
+    );
+
+    autoSubmitTargets.forEach((element) => {
+      element.addEventListener("change", function () {
+        filterForm.submit();
+      });
+    });
+
+    // 검색 input 은 엔터 입력 시 기본 submit 동작
+    const keywordInput = filterForm.querySelector('input[name="keyword"]');
+    const writerInput = filterForm.querySelector('input[name="writer"]');
+
+    [keywordInput, writerInput].forEach((input) => {
+      if (!input) return;
+
+      input.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          filterForm.submit();
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

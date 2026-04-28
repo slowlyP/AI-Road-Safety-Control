@@ -1,0 +1,105 @@
+/* ===================== 1280px ?´í•˜ ===================== */
+/* ?”ì•½ ì¹´ë“œ 3??? ì? */
+@media (max-width: 1280px) {
+  .summary-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ===================== 1080px ?´í•˜ ===================== */
+/* ?„ì²´ ?ˆì´?„ì›ƒ ?¸ë¡œ ?•ë ¬ + ?„í„° ?ì—­ ë°˜ì‘??*/
+@media (max-width: 1080px) {
+  .page-grid {
+    grid-template-columns: 1fr; /* 1??êµ¬ì¡° */
+  }
+
+  .profile-card {
+    position: static; /* ê³ ì • ?´ì œ */
+  }
+
+  .report-filter-wrap {
+    flex-direction: column; /* ?„í„° ?¸ë¡œ ?•ë ¬ */
+    align-items: stretch;
+  }
+
+  .filter-left,
+  .filter-right {
+    width: 100%; /* ?„ì²´ ?ˆë¹„ ?¬ìš© */
+  }
+
+  .filter-left {
+    flex-wrap: wrap; /* ì¤„ë°”ê¿??ˆìš© */
+  }
+
+  /* ?„í„° 2??ë°°ì¹˜ */
+  .filter-item-keyword,
+  .filter-item-region,
+  .filter-item-status,
+  .filter-item-file-type,
+  .filter-item-sort {
+    flex: 1 1 calc(50% - 10px);
+  }
+}
+
+/* ===================== 860px ?´í•˜ ===================== */
+/* ?”ì•½ ì¹´ë“œ 2??+ ?¬ë¼?´ë” ì¹´ë“œ ?¬ê¸° ì¶•ì†Œ */
+@media (max-width: 860px) {
+  .summary-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .detect-slide-card {
+    flex-basis: 240px; /* ì¹´ë“œ ?ˆë¹„ ì¤„ì´ê¸?*/
+  }
+}
+
+/* ===================== 640px ?´í•˜ (ëª¨ë°”?? ===================== */
+/* ?„ì²´ ëª¨ë°”???€??*/
+@media (max-width: 640px) {
+  .page-grid {
+    padding: 20px 14px 30px; /* ?¬ë°± ì¶•ì†Œ */
+  }
+
+  /* ?”ì•½ ì¹´ë“œ 1??*/
+  .summary-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* ?¤ëŠ˜ ?ì? ?¤ë” ?¸ë¡œ ?•ë ¬ */
+  .today-detect-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  /* ?¬ë¼?´ë” ë²„íŠ¼ ?¤ë¥¸ìª??•ë ¬ */
+  .today-detect-controls {
+    align-self: flex-end;
+  }
+
+  /* ?¬ë¼?´ë” ì¹´ë“œ ???‘ê²Œ */
+  .detect-slide-card {
+    flex-basis: 220px;
+    min-height: 146px;
+  }
+
+  /* ? ê³  ì¹´ë“œ ?ë‹¨ / ë©”í? ?¸ë¡œ ?•ë ¬ */
+  .report-top,
+  .report-meta-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* ?ì„¸ë³´ê¸° ë²„íŠ¼ ?„ì²´ ?ˆë¹„ */
+  .detail-btn {
+    width: 100%;
+  }
+
+  /* ?„í„° 1??(ëª¨ë°”?? */
+  .filter-item-keyword,
+  .filter-item-region,
+  .filter-item-status,
+  .filter-item-file-type,
+  .filter-item-sort {
+    flex: 1 1 100%;
+  }
+}

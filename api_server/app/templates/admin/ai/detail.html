@@ -1,0 +1,220 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}AI 탐지 상세{% endblock %}
+
+{% block admin_extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_ai.css') }}">
+{% endblock %}
+
+{% block admin_content %}
+
+<section class="admin-panel">
+
+  <!-- 페이지 헤더 -->
+  <div class="admin-page-header">
+    <h1 class="admin-page-title">AI 탐지 상세</h1>
+    <p class="admin-page-desc">
+      탐지 결과, 관리자 판정, 첨부 파일, 연결 신고 정보를 확인할 수 있습니다.
+    </p>
+  </div>
+
+  {% if detection %}
+
+  <!-- 상단 정보 -->
+  <div class="detail-top-grid">
+    <div class="info-card">
+      <div class="card-header">
+        <h3>탐지 정보</h3>
+      </div>
+
+      <div class="info-list">
+        <div class="info-row">
+          <span class="label">탐지 ID</span>
+          <span class="value">{{ detection.id }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="label">신고 ID</span>
+          <span class="value">{{ detection.report_id }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="label">탐지 라벨</span>
+          <span class="value">
+            {% if detection.detected_label == 'box' %}
+              박스형
+            {% elif detection.detected_label == 'bag' %}
+              봉투류
+            {% elif detection.detected_label == 'tire' %}
+              타이어
+            {% elif detection.detected_label == 'rock' %}
+              돌 / 콘크리트
+            {% elif detection.detected_label == 'debris' %}
+              파편
+            {% else %}
+              {{ detection.detected_label }}
+            {% endif %}
+          </span>
+        </div>
+
+        <div class="info-row">
+          <span class="label">신뢰도</span>
+          <span class="value">
+            <span class="badge
+              {% if detection.confidence >= 0.85 %}badge-high
+              {% elif detection.confidence >= 0.5 %}badge-mid
+              {% else %}badge-low
+              {% endif %}">
+              {{ (detection.confidence * 100) | round(2) }}%
+            </span>
+          </span>
+        </div>
+
+        <div class="info-row">
+          <span class="label">탐지 시간</span>
+          <span class="value">{{ detection.detected_at }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-card critical">
+      <div class="card-header">
+        <h3>판정 정보</h3>
+      </div>
+
+      <div class="info-list">
+        <div class="info-row">
+          <span class="label">위험도</span>
+          <span class="value">{{ report.risk_level }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="label">처리 상태</span>
+          <span class="value">
+            <span class="status {{ report.status }}">{{ report.status }}</span>
+          </span>
+        </div>
+
+        <div class="info-row">
+          <span class="label">오탐 여부</span>
+          <span class="value">
+            {% if is_false_positive %}
+              <span class="flag danger">오탐</span>
+            {% else %}
+              <span class="flag success">정상 탐지</span>
+            {% endif %}
+          </span>
+        </div>
+
+        <div class="info-row">
+          <span class="label">신고 등록일</span>
+          <span class="value">{{ report.created_at }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 본문 -->
+  <div class="detail-main-grid">
+
+    <!-- 파일 미리보기 -->
+    <div class="preview-card">
+      <div class="card-header">
+        <h3>첨부 파일 미리보기</h3>
+      </div>
+
+      {% if file %}
+        <div class="preview-meta">
+          <span><strong>파일명:</strong> {{ file.original_name }}</span>
+          <span><strong>유형:</strong> {{ file.file_type }}</span>
+        </div>
+
+        <div class="preview-box">
+          {% if file.file_type == '이미지' %}
+            <img src="{{ file.file_path }}" alt="탐지 이미지" class="preview-image">
+          {% elif file.file_type == '영상' %}
+            <video class="preview-video" controls>
+              <source src="{{ file.file_path }}">
+              브라우저가 video 태그를 지원하지 않습니다.
+            </video>
+          {% else %}
+            <div class="empty-box">미리볼 수 없는 파일 형식입니다.</div>
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="empty-box">첨부 파일이 없습니다.</div>
+      {% endif %}
+    </div>
+
+    <!-- bbox 정보 -->
+    <div class="info-card">
+      <div class="card-header">
+        <h3>Bounding Box 정보</h3>
+      </div>
+
+      <div class="info-list">
+        <div class="info-row">
+          <span class="label">X1</span>
+          <span class="value">{{ detection.bbox_x1 }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="label">Y1</span>
+          <span class="value">{{ detection.bbox_y1 }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="label">X2</span>
+          <span class="value">{{ detection.bbox_x2 }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="label">Y2</span>
+          <span class="value">{{ detection.bbox_y2 }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 연결 신고 -->
+  <div class="info-card full-card">
+    <div class="card-header">
+      <h3>연결 신고 정보</h3>
+    </div>
+
+    <div class="report-grid">
+      <div class="info-row">
+        <span class="label">신고 제목</span>
+        <span class="value">{{ report.title }}</span>
+      </div>
+
+      <div class="info-row">
+        <span class="label">신고 유형</span>
+        <span class="value">{{ report.report_type }}</span>
+      </div>
+
+      <div class="info-row">
+        <span class="label">위치</span>
+        <span class="value">{{ report.location_text or '-' }}</span>
+      </div>
+
+      <div class="info-row full">
+        <span class="label">신고 내용</span>
+        <span class="value multiline">{{ report.content or '-' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 버튼 -->
+  <div class="detail-actions">
+    <a href="{{ url_for('admin_ai.list') }}" class="filter-btn secondary">목록으로</a>
+    <a href="{{ url_for('admin_ai.summary') }}" class="filter-btn primary">요약 리포트</a>
+  </div>
+
+  {% else %}
+    <div class="empty-box">탐지 데이터를 찾을 수 없습니다.</div>
+  {% endif %}
+
+</section>
+
+{% endblock %}

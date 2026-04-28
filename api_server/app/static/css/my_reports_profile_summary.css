@@ -1,0 +1,340 @@
+/* =========================
+   왼쪽 프로필 카드 영역
+   ========================= */
+
+.profile-card {
+  padding: 24px 18px 18px;
+  position: sticky; /* 스크롤 시 고정 */
+  top: 24px;
+}
+
+/* 프로필 아이콘 (원형 + 그라데이션) */
+.profile-icon {
+  width: 74px;
+  height: 74px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #ff7b32 0%, #ff5a2b 100%);
+  color: #fff;
+  font-size: 34px;
+  box-shadow: 0 12px 28px rgba(255, 110, 42, 0.28);
+}
+
+/* 사용자 이름 */
+.profile-name {
+  margin: 0;
+  text-align: center;
+  font-size: 34px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+/* 지역 정보 */
+.profile-region {
+  margin: 6px 0 0;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #b8c7e3;
+}
+
+/* 상태 (활성, 정상 등) */
+.profile-status {
+  margin: 10px 0 18px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #29d66f;
+}
+
+/* 프로필 정보 (아이디, 이메일 등) */
+.profile-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* 라벨 (항목 이름) */
+.info-label {
+  font-size: 14px;
+  color: #8ea2c8;
+  font-weight: 600;
+  text-align: left;
+}
+
+/* 값 (실제 데이터) */
+.info-value {
+  font-size: 15px;
+  color: #ffffff;
+  font-weight: 800;
+  line-height: 1.5;
+  word-break: break-word; /* 긴 텍스트 줄바꿈 */
+  text-align: center;
+}
+
+/* 버튼 그룹 */
+.profile-action-group {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 공통 버튼 스타일 */
+.action-btn {
+  width: 100%;
+  min-height: 38px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 800;
+  transition: all 0.2s ease;
+}
+
+/* 주요 버튼 (주황색) */
+.dark-btn {
+  color: #ffffff;
+  background: linear-gradient(180deg, #ff6e2a 0%, #ff5b2e 100%);
+  box-shadow: 0 10px 24px rgba(255, 110, 42, 0.24);
+}
+
+.dark-btn:hover {
+  transform: translateY(-1px); /* 살짝 올라가는 효과 */
+  filter: brightness(1.04);
+}
+
+/* 테두리 버튼 */
+.outline-btn {
+  color: #ffb072;
+  background: rgba(255, 118, 43, 0.08);
+  border: 1px solid rgba(255, 149, 68, 0.34);
+}
+
+.outline-btn:hover {
+  background: rgba(255, 118, 43, 0.14);
+}
+
+/* 위험 버튼 */
+.danger-btn {
+  color: #ff7f9f;
+  background: rgba(255, 75, 105, 0.08);
+  border: 1px solid rgba(255, 105, 130, 0.28);
+}
+
+.danger-btn:hover {
+  background: rgba(255, 75, 105, 0.14);
+}
+
+/* =========================
+   상단 요약 카드 영역
+   ========================= */
+
+/* 카드 전체 컨테이너 */
+.summary-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)); /* 5열 */
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+/* 개별 카드 */
+.summary-card {
+  min-width: 0;
+  width: 100%;
+  min-height: 124px;
+  border-radius: 22px;
+  padding: 18px 20px 16px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, #0f1d3a 0%, #0b1730 100%);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+/* 카드 왼쪽 컬러 라인 */
+.summary-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 4px;
+  border-radius: 999px;
+}
+
+/* 카드 상단 (아이콘 + 텍스트) */
+.summary-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+/* 아이콘 */
+.summary-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.summary-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* 제목 */
+.summary-top-label {
+  font-size: 15px;
+  font-weight: 800;
+  color: #f4f7fb;
+}
+
+/* 숫자 (우측 정렬) */
+.summary-value {
+  text-align: right;
+  font-size: 23px;
+  font-weight: 900;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+/* 설명 텍스트 */
+.summary-subtext {
+  text-align: right;
+  font-size: 12px;
+  color: #9fb0cc;
+}
+
+/* =========================
+   카드 색상별 스타일
+   ========================= */
+
+/* 전체 신고 */
+.summary-card-red {
+  background:
+    radial-gradient(circle at top right, rgba(255, 93, 116, 0.14), transparent 35%),
+    linear-gradient(135deg, #102042 0%, #0a1631 100%);
+}
+
+.summary-card-red::before {
+  background: linear-gradient(180deg, #ff5f7a 0%, #ff7b5c 100%);
+}
+
+.summary-icon.red {
+  background: rgba(255, 95, 122, 0.14);
+  color: #ff8ea1;
+}
+
+/* 접수 */
+.summary-card-yellow {
+  background:
+    radial-gradient(circle at top right, rgba(255, 196, 61, 0.12), transparent 35%),
+    linear-gradient(135deg, #102042 0%, #0a1631 100%);
+}
+
+.summary-card-yellow::before {
+  background: linear-gradient(180deg, #ffbf2f 0%, #f59e0b 100%);
+}
+
+.summary-icon.yellow {
+  background: rgba(255, 191, 47, 0.14);
+  color: #ffd56a;
+}
+
+/* 처리완료 */
+.summary-card-green {
+  background:
+    radial-gradient(circle at top right, rgba(28, 214, 160, 0.12), transparent 35%),
+    linear-gradient(135deg, #102042 0%, #0a1631 100%);
+}
+
+.summary-card-green::before {
+  background: linear-gradient(180deg, #1fd6a1 0%, #14b8a6 100%);
+}
+
+.summary-icon.green {
+  background: rgba(31, 214, 161, 0.14);
+  color: #72f0cb;
+}
+
+/* 오탐 */
+.summary-card-gray {
+  background:
+    radial-gradient(circle at top right, rgba(148, 163, 184, 0.12), transparent 35%),
+    linear-gradient(135deg, #102042 0%, #0a1631 100%);
+}
+
+.summary-card-gray::before {
+  background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
+}
+
+.summary-icon.gray {
+  background: rgba(148, 163, 184, 0.14);
+  color: #cbd5e1;
+}
+
+/* 확인중 */
+.summary-card-orange {
+  background:
+    radial-gradient(circle at top right, rgba(245, 158, 11, 0.12), transparent 35%),
+    linear-gradient(135deg, #102042 0%, #0a1631 100%);
+}
+
+.summary-card-orange::before {
+  background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
+}
+
+.summary-icon.orange {
+  background: rgba(245, 158, 11, 0.14);
+  color: #ffd27a;
+}
+
+/* 상단 요약 카드 클릭 가능하게 */
+.summary-filter-card {
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    filter 0.2s ease;
+}
+
+/* hover 시 살짝 강조 */
+.summary-filter-card:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.03);
+}
+
+/* 선택된 카드(active) 강조 */
+.summary-filter-card.active {
+  transform: translateY(-3px) scale(1.02);
+  border-color: rgba(255, 255, 255, 0.26);
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+}
+
+/* active 상태일 때 왼쪽 컬러 라인도 살짝 강조 */
+.summary-filter-card.active::before {
+  width: 5px;
+  top: 10px;
+  bottom: 10px;
+}
+
+/* 키보드 접근성용 포커스 표시 */
+.summary-filter-card:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+  outline-offset: 3px;
+}

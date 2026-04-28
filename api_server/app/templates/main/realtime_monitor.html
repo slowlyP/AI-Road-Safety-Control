@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+
+{% block title %}탐지 현황 | 404 R·N·F AI{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/realtime_monitor.css') }}">
+{% endblock %}
+
+{% block content %}
+
+  <section class="monitor-section">
+    <div class="monitor-container" data-realtime-visible-days="{{ default_days or 180 }}">
+
+      <div class="monitor-summary-grid">
+        <div class="monitor-summary-card">
+          <div class="summary-card-label">현재 위험 구간 수</div>
+          <div class="summary-card-value" id="summary-current-risk-zones">
+            {{ summary.current_risk_zones }}
+          </div>
+          <div class="summary-card-sub">현재 접수/확인중/처리완료 위험 위치 기준</div>
+        </div>
+
+        <div class="monitor-summary-card">
+          <div class="summary-card-label">오늘 접수 건수</div>
+          <div class="summary-card-value" id="summary-today-reports">
+            {{ summary.today_reports }}
+          </div>
+          <div class="summary-card-sub">오늘 등록된 전체 신고 건수</div>
+        </div>
+
+        <div class="monitor-summary-card emergency">
+          <div class="summary-card-label">최근 24시간 긴급 건수</div>
+          <div class="summary-card-value" id="summary-emergency-last-24h">
+            {{ summary.emergency_last_24h }}
+          </div>
+          <div class="summary-card-sub">즉시 대응이 필요한 긴급 탐지 수</div>
+        </div>
+
+        <div class="monitor-summary-card hotspot">
+          <div class="summary-card-label">사고 다발 구간 수</div>
+          <div class="summary-card-value" id="summary-hotspots">
+            {{ summary.hotspots }}
+          </div>
+          <div class="summary-card-sub">최근 7일 기준 반복 발생 위치</div>
+        </div>
+      </div>
+
+
+      <div class="route-risk-panel">
+        <div class="route-risk-header">
+          <h2>경로 위험 보기</h2>
+          <p>
+            출발지와 도착지를 입력하면 이동 경로 주변의 위험 지점을 추려서 보여줍니다.
+            지도와 장소 자동완성은 Google Maps를 사용하고,
+            실제 길찾기 계산은 카카오모빌리티 API를 기반으로 분석합니다.
+            출발지와 도착지는 자동완성 목록에서 정확히 선택하는 것이 가장 안정적입니다.
+          </p>
+        </div>
+
+        <div class="route-risk-form">
+          <div class="route-input-group">
+            <label for="route-origin">출발지</label>
+            <input
+              type="text"
+              id="route-origin"
+              class="route-input"
+              placeholder="예: 강남역, 서울역, 서울특별시 중구 세종대로 110"
+              autocomplete="off"
+            >
+          </div>
+
+          <div class="route-input-group">
+            <label for="route-destination">도착지</label>
+            <input
+              type="text"
+              id="route-destination"
+              class="route-input"
+              placeholder="예: 잠실역, 인천공항, 판교역"
+              autocomplete="off"
+            >
+          </div>
+
+          <div class="route-input-group narrow">
+            <label for="route-risk-radius">경로 반경</label>
+            <select id="route-risk-radius" class="route-select">
+              <option value="0.3">300m</option>
+              <option value="0.5" selected>500m</option>
+              <option value="1">1km</option>
+              <option value="2">2km</option>
+            </select>
+          </div>
+
+          <div class="route-action-group">
+            <button type="button" id="find-route-risk-btn" class="route-btn primary">
+              경로 위험 확인
+            </button>
+            <button type="button" id="reset-route-risk-btn" class="route-btn secondary">
+              경로 초기화
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="route-risk-summary-panel" class="route-risk-summary-panel hidden">
+        <div class="route-risk-summary-header">
+          <div>
+            <h3>경로 위험 결과 요약</h3>
+            <p>현재 선택한 이동 경로 기준으로 위험 지점을 분석한 결과입니다.</p>
+          </div>
+          <span id="route-risk-overall-badge" class="route-risk-overall-badge normal">보통</span>
+        </div>
+
+        <div class="route-risk-summary-grid">
+          <div class="route-risk-summary-card total">
+            <div class="route-risk-summary-label">총 위험 지점</div>
+            <div class="route-risk-summary-value" id="route-summary-total-count">0</div>
+            <div class="route-risk-summary-sub">경로 반경 내 탐지된 전체 위험 수</div>
+          </div>
+
+          <div class="route-risk-summary-card emergency">
+            <div class="route-risk-summary-label">긴급</div>
+            <div class="route-risk-summary-value" id="route-summary-emergency-count">0</div>
+            <div class="route-risk-summary-sub">즉시 대응이 필요한 수준</div>
+          </div>
+
+          <div class="route-risk-summary-card danger">
+            <div class="route-risk-summary-label">위험</div>
+            <div class="route-risk-summary-value" id="route-summary-danger-count">0</div>
+            <div class="route-risk-summary-sub">사고 가능성이 높은 구간</div>
+          </div>
+
+          <div class="route-risk-summary-card warning">
+            <div class="route-risk-summary-label">주의</div>
+            <div class="route-risk-summary-value" id="route-summary-warning-count">0</div>
+            <div class="route-risk-summary-sub">운전자 주의가 필요한 구간</div>
+          </div>
+        </div>
+
+        <div class="route-risk-summary-footer">
+          <div class="route-risk-summary-message">
+            <span class="summary-message-label">안내</span>
+            <strong id="route-summary-message">경로 분석 결과가 여기에 표시됩니다.</strong>
+          </div>
+        </div>
+      </div>
+
+     <div class="monitor-filter-bar">
+        <div class="monitor-filter-left">
+          <button type="button" class="filter-btn active" data-risk-filter="all">전체</button>
+          <button type="button" class="filter-btn" data-risk-filter="긴급">긴급</button>
+          <button type="button" class="filter-btn" data-risk-filter="위험">위험</button>
+          <button type="button" class="filter-btn" data-risk-filter="주의">주의</button>
+        </div>
+
+        <div class="monitor-filter-right">
+          <button type="button" class="location-btn" id="find-nearby-risk-btn">
+            내 주변 위험 보기
+          </button>
+
+          <select id="nearby-radius-select" class="radius-select">
+            <option value="1">반경 1km</option>
+            <option value="3" selected>반경 3km</option>
+            <option value="5">반경 5km</option>
+            <option value="10">반경 10km</option>
+          </select>
+
+          <button type="button" class="location-reset-btn" id="reset-nearby-risk-btn">
+            전체 보기로 복원
+          </button>
+        </div>
+      </div>
+
+
+      <div class="monitor-filter-status" id="monitor-filter-status">
+        전체 지역 기준으로 전체 위험도를 표시하고 있습니다.
+      </div>
+
+      <div class="monitor-main-grid">
+        <div class="monitor-map-panel">
+          <div class="monitor-panel-header">
+            <h2>지도 기반 위험 현황</h2>
+            <p>현재 접수된 위험 위치와 위험도를 지도에서 확인할 수 있습니다.</p>
+          </div>
+
+          <div id="realtime-monitor-map" class="realtime-monitor-map"></div>
+
+          <div class="monitor-map-legend">
+                    <span class="legend-item">
+                        <span class="legend-dot emergency"></span> 긴급
+                    </span>
+            <span class="legend-item">
+                        <span class="legend-dot danger"></span> 위험
+                    </span>
+            <span class="legend-item">
+                        <span class="legend-dot warning"></span> 주의
+                    </span>
+            <span class="legend-item">
+                        <span class="legend-dot user"></span> 내 위치
+                    </span>
+            <span class="legend-item">
+                        <span class="legend-line route"></span> 경로
+                    </span>
+          </div>
+        </div>
+
+        <div class="monitor-list-panel">
+          <div class="monitor-panel-header">
+            <div class="risk-list-header-row">
+              <div class="risk-list-header-text">
+                <h2 id="risk-list-title">실시간 위험 리스트</h2>
+                <p id="risk-list-subtitle">최근 탐지된 위험 이벤트를 빠르게 확인할 수 있습니다.</p>
+              </div>
+
+              <div class="risk-list-sort-wrap">
+                <label for="risk-sort-select" class="risk-sort-label">정렬</label>
+                <select id="risk-sort-select" class="risk-sort-select">
+                  <option value="risk_desc">위험도 높은 순</option>
+                  <option value="latest">최신순</option>
+                  <option value="confidence_desc">신뢰도 높은 순</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div id="realtime-risk-list" class="realtime-risk-list">
+            {% for item in risk_list %}
+              <div class="risk-list-item risk-{{ item.risk_level }}" data-report-id="{{ item.report_id }}">
+                <div class="risk-list-top">
+                  <span class="risk-badge risk-{{ item.risk_level }}">{{ item.risk_level }}</span>
+                  <span class="risk-time">{{ item.time_ago }}</span>
+                </div>
+
+                <div class="risk-location">{{ item.location_text }}</div>
+
+                <div class="risk-meta">
+                  <span>장애물: {{ item.detected_label }}</span>
+                  <span>상태: {{ item.status }}</span>
+                </div>
+
+                <div class="risk-extra">
+                  <span>신고ID: {{ item.report_id }}</span>
+                  <span>신뢰도: {{ item.confidence }}</span>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="risk-detail-modal" class="risk-detail-modal hidden">
+    <div class="risk-detail-backdrop" id="risk-detail-backdrop"></div>
+
+    <div class="risk-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="risk-detail-title">
+      <button type="button" class="risk-detail-close" id="risk-detail-close" aria-label="상세정보 닫기">×</button>
+
+      <div class="risk-detail-grid">
+        <div class="risk-detail-media-panel">
+          <div class="risk-detail-media-wrap">
+            <img
+              id="risk-detail-image"
+              class="risk-detail-image"
+              src=""
+              alt="탐지 상세 이미지"
+            >
+            <div id="risk-detail-image-empty" class="risk-detail-image-empty">
+              표시할 대표 이미지가 없습니다.
+            </div>
+          </div>
+        </div>
+
+        <div class="risk-detail-info-panel">
+          <div class="risk-detail-header">
+            <span id="risk-detail-badge" class="risk-detail-badge">주의</span>
+            <span id="risk-detail-timeago" class="risk-detail-timeago">-</span>
+          </div>
+
+          <h2 id="risk-detail-title" class="risk-detail-title">상세 제목</h2>
+          <p id="risk-detail-location" class="risk-detail-location">위치 정보</p>
+
+          <div class="risk-detail-desc" id="risk-detail-content">
+            상세 내용 없음
+          </div>
+
+          <div class="risk-detail-info-list">
+            <div class="risk-detail-info-item">
+              <span class="label">신고 ID</span>
+              <span class="value" id="risk-detail-report-id">-</span>
+            </div>
+            <div class="risk-detail-info-item">
+              <span class="label">탐지 라벨</span>
+              <span class="value" id="risk-detail-detected-label">-</span>
+            </div>
+            <div class="risk-detail-info-item">
+              <span class="label">신뢰도</span>
+              <span class="value" id="risk-detail-confidence">-</span>
+            </div>
+            <div class="risk-detail-info-item">
+              <span class="label">처리 상태</span>
+              <span class="value" id="risk-detail-status">-</span>
+            </div>
+            <div class="risk-detail-info-item">
+              <span class="label">신고 방식</span>
+              <span class="value" id="risk-detail-report-type">-</span>
+            </div>
+            <div class="risk-detail-info-item">
+              <span class="label">발생 시간</span>
+              <span class="value" id="risk-detail-created-at">-</span>
+            </div>
+            <div class="risk-detail-info-item">
+              <span class="label">파일 유형</span>
+              <span class="value" id="risk-detail-file-type">-</span>
+            </div>
+            <div class="risk-detail-info-item">
+              <span class="label">원본 파일명</span>
+              <span class="value" id="risk-detail-original-name">-</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="global-loading-overlay" class="loading-overlay hidden">
+    <div class="loading-box">
+      <div class="loading-spinner"></div>
+      <div id="loading-text" class="loading-text">데이터 불러오는 중...</div>
+    </div>
+  </div>
+
+  <script>
+      window.REALTIME_MONITOR_CONFIG = {
+          summaryApiUrl: "{{ url_for('realtime_monitor.get_summary') }}",
+          mapPointsApiUrl: "{{ url_for('realtime_monitor.get_map_points') }}",
+          riskListApiUrl: "{{ url_for('realtime_monitor.get_risk_list') }}",
+          detailApiBaseUrl: "/realtime-monitor/detail",
+          kakaoRouteApiUrl: "/api/navigation/kakao-route"
+      };
+  </script>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{{ url_for('static', filename='js/realtime_monitor.js') }}"></script>
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places&callback=initRealtimeMonitorMap"
+    async
+    defer
+  ></script>
+{% endblock %}

@@ -1,0 +1,34 @@
+<aside class="team-sidebar">
+  <strong>404RNF</strong>
+  <div class="team-profile {% if active_member == 'kdh' %}is-active{% endif %}"
+     onclick="window.open('https://github.com/DDORINY')">
+    <img src="{{ url_for('static', filename='images/team/kdh.png') }}" alt="김도하">
+    <div>
+      <strong>김도하</strong>
+    </div>
+  </div>
+
+  <div class="team-profile {% if active_member == 'smg' %}is-active{% endif %}"
+     onclick="window.open('https://github.com/slowlyP')">
+    <img src="{{ url_for('static', filename='images/team/smg.png') }}" alt="송명근">
+    <div>
+      <strong>송명근</strong>
+    </div>
+  </div>
+
+  <div class="team-profile {% if active_member == 'lhj' %}is-active{% endif %}"
+     onclick="window.open('https://github.com/ggug0125-ui')">
+    <img src="{{ url_for('static', filename='images/team/lhj.png') }}" alt="임효정">
+    <div>
+      <strong>임효정</strong>
+    </div>
+  </div>
+
+  <div class="team-profile {% if active_member == 'kdk' %}is-active{% endif %}"
+     onclick="window.open('https://github.com/Dogyun-Kim57')">
+    <img src="{{ url_for('static', filename='images/team/kdk.png') }}" alt="김도균">
+    <div>
+      <strong>김도균</strong>
+    </div>
+  </div>
+</aside>

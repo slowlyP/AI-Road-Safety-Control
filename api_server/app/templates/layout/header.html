@@ -1,0 +1,54 @@
+<header class="site-header" id="siteHeader">
+  <div class="header-inner">
+    <a href="{{ url_for('main.index') }}" class="logo">
+      <span class="logo-badge">404</span>
+      <span class="logo-text">R·N·F <strong>AI</strong></span>
+    </a>
+
+    <nav class="main-nav" id="mainNav">
+      <ul class="nav-list">
+        <li><a href="{{ url_for('main.index') }}#intro">소개</a></li>
+        <li><a href="{{ url_for('main.index') }}#feature">기능</a></li>
+        <li><a href="{{ url_for('main.index') }}#tech">기술</a></li>
+        <li><a href="{{ url_for('main.index') }}#alert">알림</a></li>
+        <li>
+          <a href="{{ url_for('realtime_monitor.realtime_monitor_page') }}">
+            탐지 현황
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('realtime_monitor.cctv_dashboard') }}">
+            CCTV 보기
+          </a>
+        </li>
+        <li><a href="{{ url_for('report.create_report_page') }}" class="highlight-link">신고하기</a></li>
+        <li><a href="{{ url_for('board.board_list') }}">자유게시판</a></li>
+
+        {% if is_admin %}
+        <li>
+          <a href="{{ url_for('admin.dashboard') }}" class="admin-link">
+            대시보드
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+
+    <div class="header-actions">
+      {% if is_logged_in %}
+      <span class="user-name">{{ user_name }}님</span>
+      <a href="{{ url_for('report_list.my_reports_page') }}" class="btn btn-outline">마이페이지</a>
+      <a href="{{ url_for('auth.logout') }}" class="btn btn-primary">로그아웃</a>
+      {% else %}
+      <a href="{{ url_for('auth.login') }}" class="btn btn-outline">로그인</a>
+      <a href="{{ url_for('auth.signup') }}" class="btn btn-primary">회원가입</a>
+      {% endif %}
+    </div>
+
+    <button class="menu-toggle" id="menuToggle" aria-label="모바일 메뉴 열기">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+</header>

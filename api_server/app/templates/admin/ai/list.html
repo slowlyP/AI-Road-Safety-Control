@@ -1,0 +1,216 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}AI 탐지 로그{% endblock %}
+
+{% block admin_extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_ai.css') }}">
+{% endblock %}
+
+{% block admin_content %}
+
+<section class="admin-panel">
+
+  <!-- 페이지 헤더 -->
+  <div class="admin-page-header">
+    <h1 class="admin-page-title">AI 탐지 로그</h1>
+    <p class="admin-page-desc">
+      AI가 탐지한 낙하물 로그를 조회하고 필터링할 수 있습니다.
+    </p>
+  </div>
+
+  <!-- 필터 카드 -->
+  <div class="filter-card">
+    <div class="filter-card-header">
+      <h3>필터 검색</h3>
+      <p>라벨, 상태, confidence 범위를 기준으로 탐지 로그를 빠르게 조회할 수 있습니다.</p>
+    </div>
+
+    <form method="GET" class="filter-form">
+      <div class="filter-grid">
+
+        <div class="filter-group">
+          <label for="label">라벨</label>
+          <select name="label" id="label">
+            <option value="">라벨 전체</option>
+            {% for option in label_options %}
+              <option value="{{ option.value }}"
+                {% if filters.label == option.value %}selected{% endif %}>
+                {{ option.label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="status">상태</label>
+          <select name="status" id="status">
+            <option value="">상태 전체</option>
+            <option value="접수" {% if filters.status == '접수' %}selected{% endif %}>접수</option>
+            <option value="확인중" {% if filters.status == '확인중' %}selected{% endif %}>확인중</option>
+            <option value="처리완료" {% if filters.status == '처리완료' %}selected{% endif %}>처리완료</option>
+            <option value="오탐" {% if filters.status == '오탐' %}selected{% endif %}>오탐</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="min_conf">최소 confidence</label>
+          <input
+            type="number"
+            name="min_conf"
+            id="min_conf"
+            placeholder="예: 0.50"
+            value="{{ filters.min_conf or '' }}"
+            step="0.01"
+          >
+        </div>
+
+        <div class="filter-group">
+          <label for="max_conf">최대 confidence</label>
+          <input
+            type="number"
+            name="max_conf"
+            id="max_conf"
+            placeholder="예: 0.99"
+            value="{{ filters.max_conf or '' }}"
+            step="0.01"
+          >
+        </div>
+
+      </div>
+
+      <div class="filter-actions">
+        <button type="submit" class="filter-btn primary">검색</button>
+        <a href="{{ url_for('admin_ai.list') }}" class="filter-btn secondary">초기화</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- 결과 메타 -->
+  <div class="ai-list-meta">
+    <div class="ai-result-count">
+      검색 결과 <strong>{{ pagination.total if pagination else logs|length }}</strong>건
+    </div>
+    <div class="ai-help-text">
+      상세 보기에서 탐지 정보, 연결 신고, 첨부 파일, bounding box를 확인할 수 있습니다.
+    </div>
+  </div>
+
+  <!-- 테이블 카드 -->
+  <div class="table-card">
+    <div class="chart-card-header">
+      <h3>탐지 로그 목록</h3>
+    </div>
+
+    <div class="table-wrapper">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>라벨</th>
+            <th>신뢰도</th>
+            <th>위험도</th>
+            <th>상태</th>
+            <th>파일</th>
+            <th>탐지시간</th>
+            <th>상세</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for item in logs %}
+          <tr>
+            <td>{{ item.detection_id }}</td>
+
+            <td>
+              {% if item.detected_label == 'box' %}
+                박스형
+              {% elif item.detected_label == 'bag' %}
+                봉투류
+              {% elif item.detected_label == 'tire' %}
+                타이어
+              {% elif item.detected_label == 'rock' %}
+                돌 / 콘크리트
+              {% elif item.detected_label == 'debris' %}
+                파편
+              {% else %}
+                {{ item.detected_label }}
+              {% endif %}
+            </td>
+
+            <td>
+              <span class="badge
+                {% if item.confidence >= 0.85 %}badge-high
+                {% elif item.confidence >= 0.5 %}badge-mid
+                {% else %}badge-low
+                {% endif %}">
+                {{ (item.confidence * 100) | round(2) }}%
+              </span>
+            </td>
+
+            <td>{{ item.risk_level }}</td>
+
+            <td>
+              <span class="status {{ item.status }}">
+                {{ item.status }}
+              </span>
+            </td>
+
+            <td>
+              {% if item.file_type == '이미지' %}
+                이미지
+              {% elif item.file_type == '영상' %}
+                영상
+              {% else %}
+                -
+              {% endif %}
+            </td>
+
+            <td>{{ item.detected_at }}</td>
+
+            <td>
+              <a href="{{ url_for('admin_ai.detail', detection_id=item.detection_id) }}"
+                 class="detail-btn">
+                보기
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8">탐지 로그 데이터가 없습니다.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 페이지네이션 -->
+    {% if pagination %}
+    <div class="pagination">
+      {% if pagination.has_prev %}
+        <a href="{{ url_for('admin_ai.list',
+          page=pagination.prev_num,
+          label=filters.label,
+          status=filters.status,
+          min_conf=filters.min_conf,
+          max_conf=filters.max_conf
+        ) }}">이전</a>
+      {% endif %}
+
+      <span>{{ pagination.page }} / {{ pagination.pages if pagination.pages > 0 else 1 }}</span>
+
+      {% if pagination.has_next %}
+        <a href="{{ url_for('admin_ai.list',
+          page=pagination.next_num,
+          label=filters.label,
+          status=filters.status,
+          min_conf=filters.min_conf,
+          max_conf=filters.max_conf
+        ) }}">다음</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+</section>
+
+{% endblock %}
